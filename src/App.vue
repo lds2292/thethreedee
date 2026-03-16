@@ -127,6 +127,9 @@ function resetFile() {
 
 .main {
   flex: 1;
+  min-height: 0; /* iOS Safari: flex 자식의 height:100% 해석 버그 방지 */
+  display: flex;
+  flex-direction: column;
   overflow: hidden;
 }
 

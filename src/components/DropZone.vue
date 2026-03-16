@@ -152,7 +152,8 @@ async function processFile(file) {
 .dropzone-wrapper {
   display: flex;
   flex-direction: column;
-  height: 100%;
+  flex: 1;      /* height:100% 대신 flex:1 — iOS Safari 호환 */
+  min-height: 0;
 }
 
 .dropzone-area {

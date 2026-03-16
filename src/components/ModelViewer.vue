@@ -697,9 +697,10 @@ onBeforeUnmount(() => {
 
 <style scoped>
 .viewer-wrapper {
+  flex: 1;      /* height:100% 대신 flex:1 사용 — iOS Safari 호환 */
+  min-height: 0;
   position: relative;
   width: 100%;
-  height: 100%;
 }
 
 .canvas {
