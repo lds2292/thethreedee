@@ -1,42 +1,46 @@
 <template>
   <div class="app">
-    <header class="header">
-      <div class="logo">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M12 2L2 7l10 5 10-5-10-5z"/>
-          <path d="M2 17l10 5 10-5"/>
-          <path d="M2 12l10 5 10-5"/>
-        </svg>
-        3D Viewer
-      </div>
-      <div class="header-right">
-        <span class="supported-formats">STL · OBJ · GLTF · GLB 지원</span>
-        <button class="btn-about" title="About" @click="showAbout = true">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="12" r="10"/>
-            <line x1="12" y1="8" x2="12" y2="8.5"/>
-            <line x1="12" y1="12" x2="12" y2="16"/>
+    <MobileBlock v-if="isMobile" />
+
+    <template v-else>
+      <header class="header">
+        <div class="logo">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+            <path d="M2 17l10 5 10-5"/>
+            <path d="M2 12l10 5 10-5"/>
           </svg>
-        </button>
-      </div>
-    </header>
+          3D Viewer
+        </div>
+        <div class="header-right">
+          <span class="supported-formats">STL · OBJ · GLTF · GLB 지원</span>
+          <button class="btn-about" title="About" @click="showAbout = true">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="12" y1="8" x2="12" y2="8.5"/>
+              <line x1="12" y1="12" x2="12" y2="16"/>
+            </svg>
+          </button>
+        </div>
+      </header>
 
-    <main class="main">
-      <ModelViewer v-if="modelFile" :file="modelFile" @reset="resetFile" />
-      <DropZone v-else @file-loaded="onFileLoaded" />
-    </main>
+      <main class="main">
+        <ModelViewer v-if="modelFile" :file="modelFile" @reset="resetFile" />
+        <DropZone v-else @file-loaded="onFileLoaded" />
+      </main>
 
-    <footer class="ad-footer">
-      <ins class="adsbygoogle"
-        style="display:block"
-        data-ad-client="ca-pub-1253318658034453"
-        data-ad-slot="XXXXXXXXXX"
-        data-ad-format="auto"
-        data-full-width-responsive="true"
-      />
-    </footer>
+      <footer class="ad-footer">
+        <ins class="adsbygoogle"
+          style="display:block"
+          data-ad-client="ca-pub-1253318658034453"
+          data-ad-slot="XXXXXXXXXX"
+          data-ad-format="auto"
+          data-full-width-responsive="true"
+        />
+      </footer>
 
-    <AboutModal v-model="showAbout" />
+      <AboutModal v-model="showAbout" />
+    </template>
   </div>
 </template>
 
@@ -45,11 +49,20 @@ import { ref, onMounted } from 'vue'
 import DropZone from './components/DropZone.vue'
 import ModelViewer from './components/ModelViewer.vue'
 import AboutModal from './components/AboutModal.vue'
+import MobileBlock from './components/MobileBlock.vue'
+
+const MOBILE_BREAKPOINT = 768
+
+const isMobile = ref(window.innerWidth < MOBILE_BREAKPOINT)
+window.addEventListener('resize', () => {
+  isMobile.value = window.innerWidth < MOBILE_BREAKPOINT
+})
 
 const modelFile = ref(null)
 const showAbout = ref(false)
 
 onMounted(() => {
+  if (isMobile.value) return
   try {
     (window.adsbygoogle = window.adsbygoogle || []).push({})
   } catch (e) {}
