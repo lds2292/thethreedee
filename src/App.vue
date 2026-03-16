@@ -1,0 +1,115 @@
+<template>
+  <div class="app">
+    <header class="header">
+      <div class="logo">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+          <path d="M2 17l10 5 10-5"/>
+          <path d="M2 12l10 5 10-5"/>
+        </svg>
+        3D Viewer
+      </div>
+      <div class="header-right">
+        <span class="supported-formats">STL · OBJ · GLTF · GLB 지원</span>
+        <button class="btn-about" title="About" @click="showAbout = true">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="12" y1="8" x2="12" y2="8.5"/>
+            <line x1="12" y1="12" x2="12" y2="16"/>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <main class="main">
+      <ModelViewer v-if="modelFile" :file="modelFile" @reset="resetFile" />
+      <DropZone v-else @file-loaded="onFileLoaded" />
+    </main>
+
+    <AboutModal v-model="showAbout" />
+  </div>
+</template>
+
+<script setup>
+import { ref } from 'vue'
+import DropZone from './components/DropZone.vue'
+import ModelViewer from './components/ModelViewer.vue'
+import AboutModal from './components/AboutModal.vue'
+
+const modelFile = ref(null)
+const showAbout = ref(false)
+
+function onFileLoaded(file) {
+  modelFile.value = file
+}
+
+function resetFile() {
+  modelFile.value = null
+}
+</script>
+
+<style scoped>
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  height: 56px;
+  background: #16161d;
+  border-bottom: 1px solid #2a2a3a;
+  flex-shrink: 0;
+  z-index: 10;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 18px;
+  font-weight: 600;
+  color: #a78bfa;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.supported-formats {
+  font-size: 12px;
+  color: #6b7280;
+  letter-spacing: 0.05em;
+}
+
+.btn-about {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  color: #6b7280;
+  background: transparent;
+  border: 1px solid #2a2a3a;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+  padding: 0;
+}
+
+.btn-about:hover {
+  color: #a78bfa;
+  border-color: rgba(167, 139, 250, 0.4);
+}
+
+.main {
+  flex: 1;
+  overflow: hidden;
+}
+</style>
