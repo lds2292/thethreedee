@@ -372,8 +372,9 @@ function setView(preset) {
 // ── Three.js 초기화 ────────────────────────────────────────────────────
 function initThree() {
   const canvas = canvasRef.value
-  const w = canvas.clientWidth
-  const h = canvas.clientHeight
+  const container = canvas.parentElement
+  const w = container.clientWidth
+  const h = container.clientHeight
 
   renderer = new THREE.WebGLRenderer({ canvas, antialias: true, preserveDrawingBuffer: true })
   renderer.setSize(w, h)
@@ -647,8 +648,12 @@ async function loadModel() {
 function onResize() {
   const canvas = canvasRef.value
   if (!canvas) return
-  const w = canvas.clientWidth
-  const h = canvas.clientHeight
+  // canvas는 Three.js가 inline style로 크기를 덮어쓰므로
+  // CSS/flexbox로 결정되는 부모 컨테이너 크기를 기준으로 읽음
+  const container = canvas.parentElement
+  const w = container.clientWidth
+  const h = container.clientHeight
+  if (!w || !h) return
   camera.aspect = w / h
   camera.updateProjectionMatrix()
   renderer.setSize(w, h)
