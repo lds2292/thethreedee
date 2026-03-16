@@ -405,6 +405,7 @@ function initThree() {
   controls.maxDistance = 500
   controls.addEventListener('change', requestRender)
 
+  window.removeEventListener('resize', onResize) // 중복 등록 방지
   window.addEventListener('resize', onResize)
 }
 
@@ -580,6 +581,9 @@ async function loadModel() {
     loadingMsg.value = '씬 구성 중...'
 
     if (result.type === 'stl') {
+      if (!(result.positions instanceof Float32Array) || !(result.normals instanceof Float32Array)) {
+        throw new Error('Worker 응답 오류: Float32Array가 아닙니다')
+      }
       const geo = new THREE.BufferGeometry()
       geo.setAttribute('position', new THREE.BufferAttribute(result.positions, 3))
       geo.setAttribute('normal',   new THREE.BufferAttribute(result.normals,   3))
@@ -627,7 +631,7 @@ async function loadModel() {
     requestRender()
 
   } catch (e) {
-    console.error(e)
+    if (import.meta.env.DEV) console.error(e)
     errorMsg.value = '파일을 로드하는 중 오류가 발생했습니다.'
     isLoading.value = false
   }
