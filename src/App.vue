@@ -129,6 +129,10 @@ function resetFile() {
   overflow: hidden;
 }
 
+@media (max-width: 480px) {
+  .supported-formats { display: none; }
+}
+
 .ad-footer {
   width: 100%;
   max-width: 728px;

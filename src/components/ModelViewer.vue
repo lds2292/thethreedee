@@ -1057,4 +1057,39 @@ onBeforeUnmount(() => {
 }
 
 @keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Mobile (≤ 480px) ─────────────────────────────────────────────── */
+@media (max-width: 480px) {
+  /* Info bar: 좌우 여백으로 전체 너비, 줄바꿈 허용 */
+  .info-bar {
+    left: 8px;
+    right: 8px;
+    transform: none;
+    padding: 8px 12px;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .file-name { max-width: 140px; font-size: 13px; }
+  /* 파일 크기·삼각형 수는 공간 부족으로 숨김 */
+  .file-size, .tri-count { display: none; }
+
+  /* View presets: 오른쪽 여백 줄이고 버튼 소형화 */
+  .view-presets { right: 8px; }
+  .btn-view { width: 28px; height: 28px; font-size: 11px; }
+
+  /* Mesh panel: 폭 축소 */
+  .mesh-panel { width: 140px; left: 8px; max-height: 40vh; }
+
+  /* Controls hint: 모바일은 터치 조작이라 힌트 숨김 */
+  .controls-hint { display: none; }
+
+  /* Dimensions: 하단 여백 줄이고 폰트 소형화 */
+  .dimensions-panel {
+    bottom: 8px;
+    left: 8px;
+    font-size: 11px;
+    padding: 5px 8px;
+    gap: 4px;
+  }
+}
 </style>
