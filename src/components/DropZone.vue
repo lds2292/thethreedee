@@ -91,7 +91,43 @@ onMounted(() => {
 
 const MAX_FILE_BYTES = 500 * 1024 * 1024 // 500 MB
 
-function processFile(file) {
+async function checkMagicBytes(file, ext) {
+  const slice = await file.slice(0, 512).arrayBuffer()
+  const bytes = new Uint8Array(slice)
+
+  if (ext === 'glb') {
+    // Binary GLTF: 첫 4바이트 = "glTF" (0x67 0x6C 0x54 0x46)
+    return bytes[0] === 0x67 && bytes[1] === 0x6C && bytes[2] === 0x54 && bytes[3] === 0x46
+  }
+
+  if (ext === 'gltf') {
+    // JSON 텍스트: 공백 제거 후 '{' 로 시작
+    const text = new TextDecoder().decode(bytes).trimStart()
+    return text.startsWith('{')
+  }
+
+  if (ext === 'stl') {
+    // ASCII STL: "solid" 로 시작
+    const text = new TextDecoder('utf-8', { fatal: false }).decode(bytes.slice(0, 256))
+    if (text.trimStart().toLowerCase().startsWith('solid')) return true
+    // Binary STL: 파일 크기 = 80(헤더) + 4(triCount) + triCount * 50
+    if (bytes.length >= 84) {
+      const triCount = new DataView(slice).getUint32(80, true)
+      return Math.abs(file.size - (84 + triCount * 50)) < 10
+    }
+    return false
+  }
+
+  if (ext === 'obj') {
+    // OBJ 텍스트: 정점(v), 노멀(vn), UV(vt), 면(f), 주석(#) 등 OBJ 키워드 포함 여부
+    const text = new TextDecoder('utf-8', { fatal: false }).decode(bytes)
+    return /^(#|v |vt |vn |f |o |g |mtllib|usemtl)/m.test(text)
+  }
+
+  return false
+}
+
+async function processFile(file) {
   errorMsg.value = ''
   const ext = file.name.split('.').pop().toLowerCase()
   if (!['stl', 'obj', 'gltf', 'glb'].includes(ext)) {
@@ -101,6 +137,11 @@ function processFile(file) {
   }
   if (file.size > MAX_FILE_BYTES) {
     errorMsg.value = '파일 크기가 너무 큽니다 (최대 500 MB)'
+    return
+  }
+  const isValid = await checkMagicBytes(file, ext)
+  if (!isValid) {
+    errorMsg.value = `파일 내용이 .${ext} 형식과 일치하지 않습니다`
     return
   }
   emit('file-loaded', file)
