@@ -283,6 +283,7 @@ let needsRender = false
 let rafId = null
 let fitDistance = 5
 let cameraAnim = null  // { fromPos, toPos, start, duration }
+let resizeObserver = null
 
 function requestRender() { needsRender = true }
 
@@ -407,8 +408,12 @@ function initThree() {
 
   window.removeEventListener('resize', onResize) // 중복 등록 방지
   window.addEventListener('resize', onResize)
-  // iOS Safari: 화면 회전 시 100dvh 재계산 후 리사이즈
-  screen.orientation?.addEventListener('change', () => setTimeout(onResize, 200))
+
+  // ResizeObserver: CSS 레이아웃이 확정되는 순간 자동으로 onResize 트리거
+  // - production에서 CSS/JS 병렬 로드로 인한 초기 캔버스 크기 오류 방지
+  // - 광고 로드, 화면 회전 등 모든 레이아웃 변화에 대응
+  resizeObserver = new ResizeObserver(() => onResize())
+  resizeObserver.observe(canvas.parentElement)
 }
 
 // ── 캔버스 클릭: 메쉬 선택 ────────────────────────────────────────────
@@ -660,6 +665,7 @@ onMounted(async () => {
 
 onBeforeUnmount(() => {
   cancelAnimationFrame(rafId)
+  resizeObserver?.disconnect()
   controls?.removeEventListener('change', requestRender)
   canvasRef.value?.removeEventListener('pointerdown', onPointerDown)
   canvasRef.value?.removeEventListener('pointerup',   onPointerUp)
