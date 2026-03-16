@@ -133,7 +133,17 @@ function resetFile() {
   width: 100%;
   max-width: 728px;
   margin: 0 auto;
-  padding: 8px 24px 12px;
+  padding: 4px 24px;
   flex-shrink: 0;
+  height: 100px;  /* 광고 높이 고정: 레이아웃이 항상 이 공간을 미리 확보 */
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+}
+
+@media (max-width: 480px) {
+  .ad-footer {
+    height: 60px; /* 모바일 배너 (320×50) */
+  }
 }
 </style>
