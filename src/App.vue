@@ -26,18 +26,34 @@
       <DropZone v-else @file-loaded="onFileLoaded" />
     </main>
 
+    <footer class="ad-footer">
+      <ins class="adsbygoogle"
+        style="display:block"
+        data-ad-client="ca-pub-1253318658034453"
+        data-ad-slot="XXXXXXXXXX"
+        data-ad-format="auto"
+        data-full-width-responsive="true"
+      />
+    </footer>
+
     <AboutModal v-model="showAbout" />
   </div>
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import DropZone from './components/DropZone.vue'
 import ModelViewer from './components/ModelViewer.vue'
 import AboutModal from './components/AboutModal.vue'
 
 const modelFile = ref(null)
 const showAbout = ref(false)
+
+onMounted(() => {
+  try {
+    (window.adsbygoogle = window.adsbygoogle || []).push({})
+  } catch (e) {}
+})
 
 function onFileLoaded(file) {
   modelFile.value = file
@@ -111,5 +127,13 @@ function resetFile() {
 .main {
   flex: 1;
   overflow: hidden;
+}
+
+.ad-footer {
+  width: 100%;
+  max-width: 728px;
+  margin: 0 auto;
+  padding: 8px 24px 12px;
+  flex-shrink: 0;
 }
 </style>
