@@ -424,7 +424,7 @@ function loadSample() {
 }
 
 .editor-textarea::placeholder {
-  color: #3d3d55;
+  color: #555570;
 }
 
 /* ── Output ──────────────────────────────────────────────────── */
