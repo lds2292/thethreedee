@@ -407,6 +407,8 @@ function initThree() {
 
   window.removeEventListener('resize', onResize) // 중복 등록 방지
   window.addEventListener('resize', onResize)
+  // iOS Safari: 화면 회전 시 100dvh 재계산 후 리사이즈
+  screen.orientation?.addEventListener('change', () => setTimeout(onResize, 200))
 }
 
 // ── 캔버스 클릭: 메쉬 선택 ────────────────────────────────────────────
