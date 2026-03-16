@@ -38,7 +38,7 @@
       <input
         ref="fileInput"
         type="file"
-        accept=".stl,.obj,.gltf,.glb"
+        accept=".stl,.obj,.gltf,.glb,model/stl,model/obj,model/gltf+json,model/gltf-binary,application/octet-stream"
         class="hidden-input"
         @change="onFileChange"
       />
