@@ -1,6 +1,8 @@
 <template>
   <div class="app">
-    <MobileBlock v-if="isMobile" />
+    <NotFoundPage v-if="isNotFound" />
+
+    <MobileBlock v-else-if="isMobile" />
 
     <template v-else>
       <header class="header">
@@ -50,6 +52,9 @@ import DropZone from './components/DropZone.vue'
 import ModelViewer from './components/ModelViewer.vue'
 import AboutModal from './components/AboutModal.vue'
 import MobileBlock from './components/MobileBlock.vue'
+import NotFoundPage from './pages/NotFoundPage.vue'
+
+const isNotFound = window.location.pathname !== '/'
 
 const MOBILE_BREAKPOINT = 768
 
