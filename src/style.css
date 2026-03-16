@@ -4,23 +4,19 @@
   padding: 0;
 }
 
-/* iOS Safari: html 높이를 실제 가용 영역으로 설정 */
-html {
-  height: -webkit-fill-available;
-}
-
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   background: #0f0f13;
   color: #e0e0e0;
+  /* --vh는 main.js에서 window.innerHeight 기반으로 실시간 계산 (iOS Safari 대응) */
   height: 100vh;
-  height: 100dvh; /* iOS 15.4+: 주소창 제외한 실제 가용 높이 */
+  height: calc(var(--vh, 1vh) * 100);
   overflow: hidden;
 }
 
 #app {
   height: 100vh;
-  height: 100dvh;
+  height: calc(var(--vh, 1vh) * 100);
   display: flex;
   flex-direction: column;
 }

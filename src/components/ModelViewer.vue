@@ -1070,6 +1070,7 @@ onBeforeUnmount(() => {
     padding: 8px 12px;
     gap: 8px;
     flex-wrap: wrap;
+    white-space: normal; /* base의 nowrap 오버라이드 */
   }
   .file-name { max-width: 140px; font-size: 13px; }
   /* 파일 크기·삼각형 수는 공간 부족으로 숨김 */

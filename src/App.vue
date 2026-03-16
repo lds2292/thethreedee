@@ -69,7 +69,7 @@ function resetFile() {
   display: flex;
   flex-direction: column;
   height: 100vh;
-  height: 100dvh;
+  height: calc(var(--vh, 1vh) * 100);
 }
 
 .header {
