@@ -308,7 +308,8 @@ function takeScreenshot() {
   renderer.render(scene, camera)
   const link = document.createElement('a')
   link.href = canvasRef.value.toDataURL('image/png')
-  link.download = props.file.name.replace(/\.[^.]+$/, '') + '.png'
+  const safeName = props.file.name.replace(/\.[^.]+$/, '').replace(/[^\w\-. ]/g, '_')
+  link.download = safeName + '.png'
   link.click()
 }
 
@@ -445,60 +446,10 @@ function onPointerUp(e) {
 function parseFileInWorker(file) {
   return new Promise((resolve, reject) => {
     const ext = file.name.split('.').pop().toLowerCase()
-    const workerCode = `
-      self.onmessage = async ({ data: { buffer, ext } }) => {
-        try {
-          if (ext === 'stl') {
-            const view = new DataView(buffer)
-            const isBinary = (() => {
-              const headerEnd = 80
-              if (buffer.byteLength < 84) return false
-              const triCount = view.getUint32(headerEnd, true)
-              const expectedSize = 84 + triCount * 50
-              if (Math.abs(buffer.byteLength - expectedSize) < 10) return true
-              const text = new TextDecoder().decode(new Uint8Array(buffer, 0, Math.min(256, buffer.byteLength)))
-              return !text.trim().startsWith('solid')
-            })()
-            let positions, normals
-            if (isBinary) {
-              const triCount = view.getUint32(80, true)
-              positions = new Float32Array(triCount * 9)
-              normals   = new Float32Array(triCount * 9)
-              let offset = 84
-              for (let i = 0; i < triCount; i++) {
-                const nx = view.getFloat32(offset,     true)
-                const ny = view.getFloat32(offset + 4, true)
-                const nz = view.getFloat32(offset + 8, true)
-                offset += 12
-                for (let v = 0; v < 3; v++) {
-                  const base = i * 9 + v * 3
-                  positions[base]     = view.getFloat32(offset,     true)
-                  positions[base + 1] = view.getFloat32(offset + 4, true)
-                  positions[base + 2] = view.getFloat32(offset + 8, true)
-                  normals[base] = nx; normals[base+1] = ny; normals[base+2] = nz
-                  offset += 12
-                }
-                offset += 2
-              }
-              self.postMessage({ type: 'stl', positions, normals, triCount }, [positions.buffer, normals.buffer])
-            } else {
-              self.postMessage({ type: 'stl_ascii', buffer }, [buffer])
-            }
-          } else {
-            const text = new TextDecoder().decode(new Uint8Array(buffer))
-            self.postMessage({ type: 'obj_text', text })
-          }
-        } catch (e) {
-          self.postMessage({ type: 'error', message: e.message })
-        }
-      }
-    `
-    const blob = new Blob([workerCode], { type: 'application/javascript' })
-    const workerUrl = URL.createObjectURL(blob)
-    const worker = new Worker(workerUrl)
+    const worker = new Worker(new URL('../workers/modelParser.worker.js', import.meta.url), { type: 'module' })
     file.arrayBuffer().then(buffer => { worker.postMessage({ buffer, ext }, [buffer]) })
-    worker.onmessage = ({ data }) => { worker.terminate(); URL.revokeObjectURL(workerUrl); resolve(data) }
-    worker.onerror  = (e)        => { worker.terminate(); URL.revokeObjectURL(workerUrl); reject(e) }
+    worker.onmessage = ({ data }) => { worker.terminate(); resolve(data) }
+    worker.onerror   = (e)       => { worker.terminate(); reject(e) }
   })
 }
 
@@ -557,7 +508,21 @@ function countTriangles(geometry) {
 function loadGLTF() {
   return new Promise((resolve, reject) => {
     const url = URL.createObjectURL(props.file)
-    new GLTFLoader().load(
+
+    // 외부 URI 차단: GLTF 파일 내 http/https 참조가 외부 서버로 요청되는 것을 막음
+    const manager = new THREE.LoadingManager()
+    manager.setURLModifier((resourceUrl) => {
+      if (resourceUrl.startsWith('blob:') || resourceUrl.startsWith('data:')) {
+        return resourceUrl
+      }
+      if (resourceUrl.startsWith('http://') || resourceUrl.startsWith('https://')) {
+        console.warn('[Security] Blocked external URI in GLTF:', resourceUrl)
+        return ''
+      }
+      return resourceUrl
+    })
+
+    new GLTFLoader(manager).load(
       url,
       (gltf) => {
         URL.revokeObjectURL(url)

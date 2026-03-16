@@ -89,11 +89,18 @@ onMounted(() => {
   } catch (e) {}
 })
 
+const MAX_FILE_BYTES = 200 * 1024 * 1024 // 200 MB
+
 function processFile(file) {
   errorMsg.value = ''
   const ext = file.name.split('.').pop().toLowerCase()
   if (!['stl', 'obj', 'gltf', 'glb'].includes(ext)) {
-    errorMsg.value = `지원하지 않는 형식입니다: .${ext} (STL, OBJ, GLTF, GLB 가능)`
+    const displayExt = ext.length > 20 ? ext.slice(0, 20) + '...' : ext
+    errorMsg.value = `지원하지 않는 형식입니다: .${displayExt} (STL, OBJ, GLTF, GLB 가능)`
+    return
+  }
+  if (file.size > MAX_FILE_BYTES) {
+    errorMsg.value = '파일 크기가 너무 큽니다 (최대 200 MB)'
     return
   }
   emit('file-loaded', file)
