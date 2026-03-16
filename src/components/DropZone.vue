@@ -89,7 +89,7 @@ onMounted(() => {
   } catch (e) {}
 })
 
-const MAX_FILE_BYTES = 200 * 1024 * 1024 // 200 MB
+const MAX_FILE_BYTES = 500 * 1024 * 1024 // 500 MB
 
 function processFile(file) {
   errorMsg.value = ''
@@ -100,7 +100,7 @@ function processFile(file) {
     return
   }
   if (file.size > MAX_FILE_BYTES) {
-    errorMsg.value = '파일 크기가 너무 큽니다 (최대 200 MB)'
+    errorMsg.value = '파일 크기가 너무 큽니다 (최대 500 MB)'
     return
   }
   emit('file-loaded', file)
