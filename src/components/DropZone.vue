@@ -46,22 +46,11 @@
 
     <p v-if="errorMsg" class="error-msg">{{ errorMsg }}</p>
     </div>
-
-    <!-- Google AdSense: data-ad-slot="XXXXXXXXXX" 을 본인 광고 슬롯 ID로 교체 -->
-    <div class="ad-container">
-      <ins class="adsbygoogle"
-        style="display:block"
-        data-ad-client="ca-pub-1253318658034453"
-        data-ad-slot="XXXXXXXXXX"
-        data-ad-format="auto"
-        data-full-width-responsive="true"
-      />
-    </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref } from 'vue'
 
 const emit = defineEmits(['file-loaded'])
 const fileInput = ref(null)
@@ -82,12 +71,6 @@ function onDrop(e) {
   const file = e.dataTransfer.files[0]
   if (file) processFile(file)
 }
-
-onMounted(() => {
-  try {
-    (window.adsbygoogle = window.adsbygoogle || []).push({})
-  } catch (e) {}
-})
 
 const MAX_FILE_BYTES = 500 * 1024 * 1024 // 500 MB
 
@@ -152,7 +135,7 @@ async function processFile(file) {
 .dropzone-wrapper {
   display: flex;
   flex-direction: column;
-  flex: 1;      /* height:100% 대신 flex:1 — iOS Safari 호환 */
+  flex: 1;
   min-height: 0;
 }
 
@@ -163,13 +146,6 @@ async function processFile(file) {
   align-items: center;
   justify-content: center;
   padding: 24px;
-}
-
-.ad-container {
-  width: 100%;
-  max-width: 728px;
-  margin: 0 auto;
-  padding: 8px 24px 16px;
 }
 
 .dropzone {

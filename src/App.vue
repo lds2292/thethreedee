@@ -27,19 +27,21 @@
       </header>
 
       <main class="main">
-        <ModelViewer v-if="modelFile" :file="modelFile" @reset="resetFile" />
-        <DropZone v-else @file-loaded="onFileLoaded" />
-      </main>
+        <div class="content-area">
+          <ModelViewer v-if="modelFile" :file="modelFile" @reset="resetFile" />
+          <DropZone v-else @file-loaded="onFileLoaded" />
+        </div>
 
-      <footer class="ad-footer">
-        <ins class="adsbygoogle"
-          style="display:block"
-          data-ad-client="ca-pub-1253318658034453"
-          data-ad-slot="XXXXXXXXXX"
-          data-ad-format="auto"
-          data-full-width-responsive="true"
-        />
-      </footer>
+        <aside class="ad-sidebar">
+          <ins class="adsbygoogle"
+            style="display:block"
+            data-ad-client="ca-pub-1253318658034453"
+            data-ad-slot="XXXXXXXXXX"
+            data-ad-format="auto"
+            data-full-width-responsive="true"
+          />
+        </aside>
+      </main>
 
       <AboutModal v-model="showAbout" />
     </template>
@@ -144,31 +146,33 @@ function resetFile() {
 
 .main {
   flex: 1;
-  min-height: 0; /* iOS Safari: flex 자식의 height:100% 해석 버그 방지 */
+  min-height: 0;
+  display: flex;
+  flex-direction: row;
+  overflow: hidden;
+}
+
+.content-area {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   overflow: hidden;
 }
 
-@media (max-width: 480px) {
-  .supported-formats { display: none; }
-}
-
-.ad-footer {
-  width: 100%;
-  max-width: 728px;
-  margin: 0 auto;
-  padding: 4px 24px;
+.ad-sidebar {
+  width: 300px;
   flex-shrink: 0;
-  height: 100px;  /* 광고 높이 고정: 레이아웃이 항상 이 공간을 미리 확보 */
-  overflow: hidden;
+  background: #16161d;
+  border-left: 1px solid #2a2a3a;
   display: flex;
   align-items: center;
+  justify-content: center;
+  overflow: hidden;
 }
 
 @media (max-width: 480px) {
-  .ad-footer {
-    height: 60px; /* 모바일 배너 (320×50) */
-  }
+  .supported-formats { display: none; }
 }
 </style>
