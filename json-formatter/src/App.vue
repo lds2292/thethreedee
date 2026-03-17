@@ -1,5 +1,6 @@
 <template>
-  <MobileBlock v-if="isMobile" />
+  <NotFoundPage v-if="isNotFound" />
+  <MobileBlock v-else-if="isMobile" />
   <div v-else class="app">
     <!-- Header -->
     <header class="header">
@@ -358,6 +359,9 @@ import { ref, computed, watch, nextTick, onMounted, onBeforeUnmount } from 'vue'
 import TreeNode from './components/TreeNode.vue'
 import HelpModal from './components/HelpModal.vue'
 import MobileBlock from './components/MobileBlock.vue'
+import NotFoundPage from './pages/NotFoundPage.vue'
+
+const isNotFound = window.location.pathname !== '/'
 
 const MOBILE_BREAKPOINT = 768
 const isMobile = ref(window.innerWidth < MOBILE_BREAKPOINT)
