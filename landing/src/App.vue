@@ -38,6 +38,7 @@
           <div class="card-body">
             <h2 class="card-title">JSON Formatter</h2>
             <p class="card-desc">Format · Validate · Minify · Convert</p>
+            <p class="card-detail">JSON을 보기 좋게 포맷하고 문법 오류를 실시간으로 검증합니다. 트리 뷰, 키 정렬, CSV·TypeScript 변환까지 하나의 도구로.</p>
             <span class="card-url">json.toolzy.site</span>
           </div>
           <div class="card-arrow">
@@ -62,6 +63,7 @@
           <div class="card-body">
             <h2 class="card-title">3D Viewer</h2>
             <p class="card-desc">STL · OBJ · GLTF · GLB</p>
+            <p class="card-detail">STL, OBJ, GLTF, GLB 파일을 브라우저에서 바로 렌더링합니다. 회전·확대·조명 조절과 와이어프레임 모드, 스크린샷 저장 지원.</p>
             <span class="card-url">3d-viewer.toolzy.site</span>
           </div>
           <div class="card-arrow">
@@ -85,6 +87,7 @@
           <div class="card-body">
             <h2 class="card-title">Base64 Encoder</h2>
             <p class="card-desc">Base64 · URL · Image → Base64</p>
+            <p class="card-detail">텍스트·URL·이미지를 Base64로 인코딩하거나 디코딩합니다. Standard, Base64url, MIME 등 다양한 Variant와 한글을 포함한 UTF-8 완전 지원.</p>
             <span class="card-url">base64.toolzy.site</span>
           </div>
           <div class="card-arrow">
@@ -241,14 +244,8 @@ onMounted(() => {
 
 .cards {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr;
   gap: 24px;
-}
-
-@media (min-width: 960px) {
-  .cards {
-    grid-template-columns: 1fr 1fr 1fr;
-  }
 }
 
 .card {
@@ -299,7 +296,7 @@ onMounted(() => {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  object-position: top left;
+  object-position: center;
   display: block;
   opacity: 0.5;
 }
@@ -332,7 +329,14 @@ onMounted(() => {
 .card-desc {
   font-size: 13px;
   color: #6b7280;
-  margin-bottom: 10px;
+  margin-bottom: 8px;
+}
+
+.card-detail {
+  font-size: 13px;
+  color: #9ca3af;
+  line-height: 1.65;
+  margin-bottom: 14px;
 }
 
 .card-url {
