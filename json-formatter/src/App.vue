@@ -101,11 +101,11 @@
         <div class="action-divider" />
 
         <div class="action-group">
-          <button class="btn btn-ghost" :disabled="!input" @click="unescapeJson" title="이중 인코딩된 JSON 문자열을 파싱">
+          <button class="btn btn-ghost" :class="{ 'btn-error': unescapeError }" :disabled="!input" @click="unescapeJson" title="이스케이프된 JSON 문자열을 파싱해 Output에 표시">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
               <polyline points="7 8 3 12 7 16"/><line x1="21" y1="12" x2="3" y2="12"/>
             </svg>
-            Unescape
+            {{ unescapeError ? 'Error!' : 'Unescape' }}
           </button>
           <button class="btn btn-ghost" :disabled="!!error || !input" @click="escapeJson" title="JSON을 이스케이프된 문자열로 변환">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
@@ -165,6 +165,7 @@ const output = ref('')
 const error = ref('')
 const indent = ref(2)
 const copied = ref(false)
+const unescapeError = ref(false)
 const textareaRef = ref(null)
 const lineNumRef = ref(null)
 
@@ -333,23 +334,22 @@ function downloadOutput() {
 function unescapeJson() {
   if (!input.value.trim()) return
   try {
-    // 입력이 JSON string literal인 경우 → 내부 값 추출
+    // 입력이 JSON string literal → 내부 값 추출 후 Output에 포맷
     const parsed = JSON.parse(input.value)
     if (typeof parsed === 'string') {
-      input.value = parsed
-      output.value = ''
+      // 추출된 문자열이 다시 유효한 JSON이면 포맷팅
+      try {
+        output.value = JSON.stringify(JSON.parse(parsed), null, indent.value)
+      } catch {
+        output.value = parsed
+      }
+    } else {
+      // 이미 JSON 객체/배열이면 그냥 포맷
+      output.value = JSON.stringify(parsed, null, indent.value)
     }
   } catch {
-    // 이미 이스케이프 처리된 문자열이면 직접 replace
-    try {
-      input.value = input.value
-        .replace(/^"|"$/g, '')
-        .replace(/\\"/g, '"')
-        .replace(/\\\\/g, '\\')
-        .replace(/\\n/g, '\n')
-        .replace(/\\t/g, '\t')
-      output.value = ''
-    } catch {}
+    unescapeError.value = true
+    setTimeout(() => { unescapeError.value = false }, 1500)
   }
 }
 
@@ -728,6 +728,11 @@ function loadSample() {
 
 .action-group .btn {
   width: 100%;
+}
+
+.btn-error {
+  color: #f87171 !important;
+  border-color: rgba(248, 113, 113, 0.4) !important;
 }
 
 .hidden-input {
