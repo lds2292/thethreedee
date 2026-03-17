@@ -1,5 +1,6 @@
 <template>
-  <div class="app">
+  <MobileBlock v-if="isMobile" />
+  <div v-else class="app">
     <!-- Header -->
     <header class="header">
       <div class="logo">
@@ -9,8 +10,19 @@
         </svg>
         JSON Formatter
       </div>
-      <span class="header-desc">Format · Validate · Minify</span>
+      <div class="header-right">
+        <span class="header-desc">Format · Validate · Minify</span>
+        <button class="btn-help" title="도움말" @click="showHelp = true">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="12" y1="16" x2="12" y2="12"/>
+            <line x1="12" y1="8" x2="12.01" y2="8"/>
+          </svg>
+        </button>
+      </div>
     </header>
+
+    <HelpModal v-model="showHelp" />
 
     <!-- Workspace -->
     <div class="workspace">
@@ -45,7 +57,6 @@
             spellcheck="false"
             autocomplete="off"
             @scroll="syncScroll"
-            @paste="onPaste"
           />
         </div>
 
@@ -101,6 +112,31 @@
         <div class="action-divider" />
 
         <div class="action-group">
+          <button class="btn btn-ghost" :class="{ 'btn-error': csvError }" :disabled="!!error || !input" @click="jsonToCsv" title="배열 JSON을 CSV로 변환 (중첩 객체는 dot-notation으로 flatten)">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+              <line x1="8" y1="13" x2="16" y2="13"/>
+              <line x1="8" y1="17" x2="16" y2="17"/>
+            </svg>
+            {{ csvError ? 'Not Array!' : 'JSON → CSV' }}
+          </button>
+        </div>
+
+        <div class="action-divider" />
+
+        <div class="action-group">
+          <button class="btn btn-ghost" :disabled="!!error || !input" @click="jsonToTs" title="JSON에서 TypeScript interface 자동 생성">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>
+            </svg>
+            JSON → TS
+          </button>
+        </div>
+
+        <div class="action-divider" />
+
+        <div class="action-group">
           <button class="btn btn-ghost" :class="{ 'btn-error': unescapeError }" :disabled="!input" @click="unescapeJson" title="이스케이프된 JSON 문자열을 파싱해 Output에 표시">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
               <polyline points="17 8 21 12 17 16"/><line x1="3" y1="12" x2="21" y2="12"/>
@@ -122,11 +158,34 @@
           <div class="view-toggle">
             <button class="btn-view-tab" :class="{ active: outputView === 'formatted' }" @click="outputView = 'formatted'">Formatted</button>
             <button class="btn-view-tab" :class="{ active: outputView === 'tree' }" @click="outputView = 'tree'">Tree</button>
+            <button v-if="outputFormat === 'csv'" class="btn-view-tab btn-view-csv" :class="{ active: outputView === 'csv' }" @click="outputView = 'csv'">CSV</button>
+            <button v-if="outputFormat === 'ts'" class="btn-view-tab btn-view-ts" :class="{ active: outputView === 'ts' }" @click="outputView = 'ts'">TS</button>
           </div>
           <div class="panel-actions">
             <template v-if="outputView === 'tree'">
               <button class="btn btn-ghost" :disabled="!parsedJson" @click="expandAll">Expand All</button>
               <button class="btn btn-ghost" :disabled="!parsedJson" @click="collapseAll">Collapse All</button>
+            </template>
+            <template v-else-if="outputView === 'csv'">
+              <button class="btn btn-ghost" :disabled="!output" title="Ctrl+Shift+S" @click="downloadOutput">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                  <polyline points="7 10 12 15 17 10"/>
+                  <line x1="12" y1="15" x2="12" y2="3"/>
+                </svg>
+                Download .csv
+              </button>
+            </template>
+            <template v-else-if="outputView === 'ts'">
+              <button class="btn btn-ghost" :disabled="!output" @click="downloadOutput">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                  <polyline points="7 10 12 15 17 10"/>
+                  <line x1="12" y1="15" x2="12" y2="3"/>
+                </svg>
+                Download .ts
+              </button>
+              <button class="btn btn-ghost" :disabled="!output" @click="copyOutput">{{ copied ? 'Copied!' : 'Copy' }}</button>
             </template>
             <template v-else>
               <button class="btn btn-ghost" :disabled="!output" title="Ctrl+Shift+S" @click="downloadOutput">
@@ -148,9 +207,76 @@
           </div>
         </div>
 
+        <!-- Search bar -->
+        <div v-show="showSearch" class="search-bar">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" class="search-icon">
+            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+          <input
+            ref="searchInputRef"
+            v-model="searchTerm"
+            class="search-input"
+            placeholder="key 또는 value 검색..."
+            @keydown.escape="closeSearch"
+          />
+          <span class="search-count" :class="{ 'no-match': searchTerm && searchResults.length === 0 }">
+            {{ searchTerm ? (searchResults.length > 0 ? `${searchResults.length}개` : 'No matches') : '' }}
+          </span>
+          <button
+            v-if="searchTerm && searchResults.length > 0"
+            class="btn-show-results"
+            :class="{ active: showResults }"
+            @click="showResults = !showResults"
+          >
+            결과보기
+            <svg width="10" height="10" viewBox="0 0 10 10" class="arrow-small" :class="{ expanded: showResults }">
+              <path d="M2 3.5 L5 6.5 L8 3.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+          <button class="search-close" @click="closeSearch">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+        </div>
+
+        <!-- Search results panel -->
+        <Transition name="results-slide">
+          <div v-if="showSearch && showResults && searchResults.length > 0" class="results-panel">
+            <div class="results-header">
+              <span class="results-title">검색 결과 <span class="results-count">{{ searchResults.length }}</span></span>
+              <span class="results-hint">클릭 시 경로 복사</span>
+            </div>
+            <div class="results-list">
+              <div
+                v-for="(r, i) in searchResults"
+                :key="i"
+                class="result-item"
+                @click="copyResultPath(r.path)"
+              >
+                <span class="result-path">{{ r.path }}</span>
+                <span class="result-sep">→</span>
+                <span class="result-key" :class="{ 'is-match': r.keyMatch }">{{ r.key }}</span>
+                <span class="result-colon">:</span>
+                <span class="result-value" :class="['rv-' + r.valueType, { 'is-match': r.valueMatch }]">{{ r.displayValue }}</span>
+                <Transition name="copied">
+                  <span v-if="copiedResultIndex === i" class="result-copied">Copied!</span>
+                </Transition>
+              </div>
+            </div>
+          </div>
+        </Transition>
+
         <!-- Formatted View -->
         <div v-if="outputView === 'formatted'" class="output-wrap">
-          <pre class="output-pre" v-if="output"><code v-html="highlightedOutput" /></pre>
+          <template v-if="output">
+            <div class="output-editor-wrap">
+              <div class="line-numbers output-line-numbers" ref="outputLineNumRef">
+                <span v-for="n in outputLineCount" :key="n">{{ n }}</span>
+              </div>
+              <pre class="output-pre" ref="outputPreRef" @scroll="syncOutputScroll"><code v-if="outputFormat === 'csv'">{{ output }}</code><code v-else v-html="highlightedOutput" /></pre>
+            </div>
+          </template>
           <div v-else class="output-empty">
             <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" opacity="0.3">
               <polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>
@@ -160,9 +286,9 @@
         </div>
 
         <!-- Tree View -->
-        <div v-else class="output-wrap tree-wrap">
+        <div v-else-if="outputView === 'tree'" class="output-wrap tree-wrap">
           <div v-if="parsedJson !== null" class="tree-root">
-            <TreeNode :key="treeKey" :value="parsedJson" :depth="0" :initial-expanded="treeInitialExpanded" />
+            <TreeNode :key="treeKey" :value="parsedJson" :depth="0" :initial-expanded="treeInitialExpanded" :search-term="searchTerm" />
           </div>
           <div v-else class="output-empty">
             <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" opacity="0.3">
@@ -172,8 +298,47 @@
           </div>
         </div>
 
+        <!-- CSV Table View -->
+        <div v-if="outputView === 'csv'" class="output-wrap csv-wrap">
+          <div v-if="csvData" class="csv-table-container">
+            <table class="csv-table">
+              <thead>
+                <tr>
+                  <th class="csv-th-index">#</th>
+                  <th v-for="h in csvData.headers" :key="h" class="csv-th">{{ h }}</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="(row, i) in csvData.rows" :key="i">
+                  <td class="csv-td-index">{{ i + 1 }}</td>
+                  <td
+                    v-for="h in csvData.headers" :key="h"
+                    class="csv-td"
+                    :class="getCsvCellClass(row[h])"
+                    @click="copyCsvCell(row[h])"
+                    :title="String(row[h] ?? '')"
+                  >{{ row[h] ?? '' }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div v-else class="output-empty">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" opacity="0.3">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+            </svg>
+            <span>JSON → CSV 버튼을 클릭하면<br>테이블이 표시됩니다</span>
+          </div>
+        </div>
+
+        <!-- TypeScript View -->
+        <div v-if="outputView === 'ts'" class="output-wrap">
+          <pre class="output-pre" v-if="output"><code class="ts-code">{{ output }}</code></pre>
+        </div>
+
         <div class="status-bar">
           <span class="stat">{{ outputStats }}</span>
+          <span v-if="outputView === 'csv' && csvData" class="stat">{{ csvData.rows.length }} rows · {{ csvData.headers.length }} columns</span>
         </div>
       </div>
     </div>
@@ -181,8 +346,20 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
+import { ref, computed, watch, nextTick, onMounted, onBeforeUnmount } from 'vue'
 import TreeNode from './components/TreeNode.vue'
+import HelpModal from './components/HelpModal.vue'
+import MobileBlock from './components/MobileBlock.vue'
+
+const MOBILE_BREAKPOINT = 768
+const isMobile = ref(window.innerWidth < MOBILE_BREAKPOINT)
+
+const showHelp         = ref(false)
+const showSearch       = ref(false)
+const showResults      = ref(false)
+const searchTerm       = ref('')
+const searchInputRef   = ref(null)
+const copiedResultIndex = ref(-1)
 
 const input = ref('')
 const output = ref('')
@@ -190,6 +367,9 @@ const error = ref('')
 const indent = ref(2)
 const copied = ref(false)
 const unescapeError = ref(false)
+const csvError = ref(false)
+const outputFormat = ref('json') // 'json' | 'csv'
+const csvData = ref(null) // { headers: [], rows: [] }
 
 // ── Tree View ─────────────────────────────────────────────────────
 const outputView        = ref('formatted') // 'formatted' | 'tree'
@@ -206,6 +386,8 @@ const parsedJson = computed(() => {
 })
 const textareaRef = ref(null)
 const lineNumRef = ref(null)
+const outputPreRef = ref(null)
+const outputLineNumRef = ref(null)
 
 const indentOptions = [
   { label: '2', value: 2 },
@@ -246,6 +428,18 @@ const inputStats = computed(() => {
   return `${lines} lines · ${formatBytes(bytes)}`
 })
 
+// ── 출력 줄 번호 ──────────────────────────────────────────────
+const outputLineCount = computed(() => {
+  if (!output.value) return 1
+  return output.value.split('\n').length
+})
+
+function syncOutputScroll() {
+  if (outputLineNumRef.value && outputPreRef.value) {
+    outputLineNumRef.value.scrollTop = outputPreRef.value.scrollTop
+  }
+}
+
 // ── 출력 stats ───────────────────────────────────────────────────
 const outputStats = computed(() => {
   if (!output.value) return ''
@@ -260,10 +454,71 @@ function formatBytes(bytes) {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
 }
 
+// ── 검색 ──────────────────────────────────────────────────────
+function traverseForResults(val, path, term, results) {
+  if (val === null || typeof val !== 'object') return
+  const entries = Array.isArray(val)
+    ? val.map((v, i) => [i, v])
+    : Object.entries(val)
+  for (const [k, v] of entries) {
+    const childPath = typeof k === 'number'
+      ? `${path}[${k}]`
+      : /^[a-zA-Z_$][a-zA-Z0-9_$]*$/.test(k) ? `${path}.${k}` : `${path}["${k}"]`
+    const t = term.toLowerCase()
+    const keyMatch   = String(k).toLowerCase().includes(t)
+    const isLeaf     = v === null || typeof v !== 'object'
+    const valueMatch = isLeaf && String(v ?? '').toLowerCase().includes(t)
+    if (keyMatch || valueMatch) {
+      const valueType = v === null ? 'null' : typeof v === 'boolean' ? 'bool' : typeof v === 'number' ? 'num' : Array.isArray(v) ? 'arr' : typeof v === 'object' ? 'obj' : 'str'
+      const displayValue = v === null ? 'null'
+        : Array.isArray(v) ? `[ ${v.length} items ]`
+        : typeof v === 'object' ? `{ ${Object.keys(v).length} keys }`
+        : typeof v === 'string' ? `"${v}"` : String(v)
+      results.push({ path: childPath, key: String(k), keyMatch, valueMatch, displayValue, valueType })
+    }
+    traverseForResults(v, childPath, term, results)
+  }
+}
+
+const searchResults = computed(() => {
+  if (!searchTerm.value || !parsedJson.value) return []
+  const results = []
+  traverseForResults(parsedJson.value, '$', searchTerm.value, results)
+  return results
+})
+
+function openSearch() {
+  showSearch.value = true
+  nextTick(() => searchInputRef.value?.focus())
+}
+
+function closeSearch() {
+  showSearch.value  = false
+  showResults.value = false
+  searchTerm.value  = ''
+}
+
+async function copyResultPath(path) {
+  const idx = searchResults.value.findIndex(r => r.path === path)
+  try {
+    await navigator.clipboard.writeText(path)
+    copiedResultIndex.value = idx
+    setTimeout(() => { copiedResultIndex.value = -1 }, 1200)
+  } catch {}
+}
+
 // ── 신택스 하이라이팅 ─────────────────────────────────────────────
 const highlightedOutput = computed(() => {
   if (!output.value) return ''
-  return highlightJson(output.value)
+  let html = highlightJson(output.value)
+  if (searchTerm.value) {
+    const escaped = searchTerm.value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    html = html.replace(
+      new RegExp(`(?![^<]*>)(${escaped})`, 'gi'),
+      '<mark class="search-mark">$1</mark>'
+    )
+  }
+  return html
 })
 
 function highlightJson(json) {
@@ -288,10 +543,16 @@ function highlightJson(json) {
 }
 
 // ── 액션 ─────────────────────────────────────────────────────────
+function resetToJson() {
+  outputFormat.value = 'json'
+  if (outputView.value === 'csv' || outputView.value === 'ts') outputView.value = 'formatted'
+}
+
 function format() {
   if (error.value || !input.value) return
   try {
     output.value = JSON.stringify(JSON.parse(input.value), null, indent.value)
+    resetToJson()
   } catch {}
 }
 
@@ -299,6 +560,7 @@ function minify() {
   if (error.value || !input.value) return
   try {
     output.value = JSON.stringify(JSON.parse(input.value))
+    resetToJson()
   } catch {}
 }
 
@@ -306,6 +568,7 @@ function sortKeys() {
   if (error.value || !input.value) return
   try {
     output.value = JSON.stringify(sortDeep(JSON.parse(input.value)), null, indent.value)
+    resetToJson()
   } catch {}
 }
 
@@ -342,28 +605,18 @@ function onUpload(e) {
   e.target.value = ''
 }
 
-// ── 붙여넣기 자동 포맷 ────────────────────────────────────────────
-function onPaste(e) {
-  const text = e.clipboardData?.getData('text') ?? ''
-  if (!text.trim()) return
-  try {
-    const parsed = JSON.parse(text)
-    e.preventDefault()
-    input.value = text
-    output.value = JSON.stringify(parsed, null, indent.value)
-  } catch {
-    // 유효하지 않은 JSON이면 그냥 붙여넣기 허용
-  }
-}
 
 // ── 다운로드 ──────────────────────────────────────────────────────
 function downloadOutput() {
   if (!output.value) return
-  const blob = new Blob([output.value], { type: 'application/json' })
+  const fmt = outputFormat.value
+  const mime = fmt === 'csv' ? 'text/csv' : fmt === 'ts' ? 'text/plain' : 'application/json'
+  const ext  = fmt === 'csv' ? 'csv'      : fmt === 'ts' ? 'ts'         : 'json'
+  const blob = new Blob([output.value], { type: mime })
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
   a.href = url
-  a.download = 'output.json'
+  a.download = `output.${ext}`
   a.click()
   URL.revokeObjectURL(url)
 }
@@ -385,6 +638,7 @@ function unescapeJson() {
       // 이미 JSON 객체/배열이면 그냥 포맷
       output.value = JSON.stringify(parsed, null, indent.value)
     }
+    resetToJson()
   } catch {
     unescapeError.value = true
     setTimeout(() => { unescapeError.value = false }, 1500)
@@ -394,6 +648,129 @@ function unescapeJson() {
 function escapeJson() {
   if (error.value || !input.value) return
   output.value = JSON.stringify(input.value)
+  resetToJson()
+}
+
+// ── JSON → TypeScript ─────────────────────────────────────────
+function jsonToTs() {
+  if (error.value || !input.value) return
+  try {
+    const parsed = JSON.parse(input.value)
+    const interfaces = []
+    inferInterface(parsed, 'Root', interfaces)
+    output.value = interfaces.join('\n\n')
+    outputFormat.value = 'ts'
+    outputView.value = 'ts'
+  } catch {}
+}
+
+function inferType(val, key, interfaces) {
+  if (val === null) return 'null'
+  if (typeof val === 'string') return 'string'
+  if (typeof val === 'number') return Number.isInteger(val) ? 'number' : 'number'
+  if (typeof val === 'boolean') return 'boolean'
+  if (Array.isArray(val)) {
+    if (val.length === 0) return 'unknown[]'
+    const elemType = inferType(val[0], key, interfaces)
+    return `${elemType}[]`
+  }
+  if (typeof val === 'object') {
+    const name = toInterfaceName(key)
+    inferInterface(val, name, interfaces)
+    return name
+  }
+  return 'unknown'
+}
+
+function inferInterface(obj, name, interfaces) {
+  if (Array.isArray(obj)) {
+    // 배열 최상위인 경우 첫 요소로 추론
+    if (obj.length > 0 && typeof obj[0] === 'object' && obj[0] !== null) {
+      inferInterface(obj[0], name, interfaces)
+    }
+    return
+  }
+  const lines = [`interface ${name} {`]
+  for (const [k, v] of Object.entries(obj)) {
+    const type = inferType(v, k, interfaces)
+    const safeKey = /^[a-zA-Z_$][a-zA-Z0-9_$]*$/.test(k) ? k : `"${k}"`
+    lines.push(`  ${safeKey}: ${type};`)
+  }
+  lines.push('}')
+  // 중복 방지: 같은 이름 interface가 없을 때만 추가
+  if (!interfaces.some(i => i.startsWith(`interface ${name} `))) {
+    interfaces.push(lines.join('\n'))
+  }
+}
+
+function toInterfaceName(key) {
+  if (typeof key === 'number') return 'Item'
+  return key.charAt(0).toUpperCase() + key.slice(1).replace(/[^a-zA-Z0-9]/g, '')
+}
+
+// ── JSON → CSV ────────────────────────────────────────────────
+function flattenObject(obj, prefix = '') {
+  return Object.keys(obj).reduce((acc, key) => {
+    const fullKey = prefix ? `${prefix}.${key}` : key
+    const val = obj[key]
+    if (val !== null && typeof val === 'object' && !Array.isArray(val)) {
+      Object.assign(acc, flattenObject(val, fullKey))
+    } else if (Array.isArray(val)) {
+      acc[fullKey] = val.map(v =>
+        v !== null && typeof v === 'object' ? JSON.stringify(v) : String(v ?? '')
+      ).join(';')
+    } else {
+      acc[fullKey] = val ?? ''
+    }
+    return acc
+  }, {})
+}
+
+function csvEscape(val) {
+  const str = String(val)
+  if (str.includes(',') || str.includes('\n') || str.includes('"')) {
+    return `"${str.replace(/"/g, '""')}"`
+  }
+  return str
+}
+
+function jsonToCsv() {
+  if (error.value || !input.value) return
+  try {
+    const parsed = JSON.parse(input.value)
+    if (!Array.isArray(parsed) || parsed.length === 0) {
+      csvError.value = true
+      setTimeout(() => { csvError.value = false }, 1500)
+      return
+    }
+    const rows = parsed.map(item =>
+      item !== null && typeof item === 'object' ? flattenObject(item) : { value: item }
+    )
+    // 모든 row의 키 합집합 (순서 유지)
+    const headers = [...new Set(rows.flatMap(r => Object.keys(r)))]
+    const lines = [
+      headers.map(csvEscape).join(','),
+      ...rows.map(row => headers.map(h => csvEscape(row[h] ?? '')).join(','))
+    ]
+    output.value = lines.join('\n')
+    outputFormat.value = 'csv'
+    csvData.value = { headers, rows }
+    outputView.value = 'csv'
+  } catch {
+    csvError.value = true
+    setTimeout(() => { csvError.value = false }, 1500)
+  }
+}
+
+function getCsvCellClass(val) {
+  if (val === null || val === undefined || val === '') return 'v-empty'
+  if (val === true || val === false) return 'v-bool'
+  if (typeof val === 'number') return 'v-num'
+  return ''
+}
+
+async function copyCsvCell(val) {
+  try { await navigator.clipboard.writeText(String(val ?? '')) } catch {}
 }
 
 // ── 키보드 단축키 ─────────────────────────────────────────────────
@@ -405,6 +782,8 @@ function onKeydown(e) {
   if (mod && e.shiftKey && e.key === 'M') { e.preventDefault(); minify(); return }
   // Ctrl/Cmd+Shift+S → Download
   if (mod && e.shiftKey && e.key === 'S') { e.preventDefault(); downloadOutput(); return }
+  // Ctrl/Cmd+F → Search
+  if (mod && e.key === 'f') { e.preventDefault(); showSearch.value ? searchInputRef.value?.focus() : openSearch(); return }
 }
 
 onMounted(() => document.addEventListener('keydown', onKeydown))
@@ -466,11 +845,32 @@ function loadSample() {
   color: #a78bfa;
 }
 
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
 .header-desc {
   font-size: 12px;
   color: #6b7280;
   letter-spacing: 0.05em;
 }
+
+.btn-help {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background: transparent;
+  border: 1px solid #2a2a3a;
+  border-radius: 7px;
+  color: #6b7280;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+}
+.btn-help:hover { color: #a78bfa; border-color: rgba(167, 139, 250, 0.4); }
 
 /* ── Workspace ───────────────────────────────────────────────── */
 .workspace {
@@ -599,18 +999,34 @@ function loadSample() {
 .output-wrap {
   flex: 1;
   min-height: 0;
-  overflow: auto;
+  overflow: hidden;
+  background: #0f0f13;
+  display: flex;
+  flex-direction: column;
+}
+
+.output-editor-wrap {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  overflow: hidden;
   background: #0f0f13;
 }
 
+.output-line-numbers {
+  border-right: 1px solid #2a2a3a;
+}
+
 .output-pre {
+  flex: 1;
+  min-width: 0;
   margin: 0;
   padding: 14px 16px;
   font-family: 'JetBrains Mono', 'Fira Code', ui-monospace, monospace;
   font-size: 13px;
   line-height: 22px;
   white-space: pre;
-  counter-reset: line;
+  overflow: auto;
 }
 
 .output-pre code {
@@ -802,5 +1218,280 @@ function loadSample() {
 
 .hidden-input {
   display: none;
+}
+
+/* ── Search bar ──────────────────────────────────────────────── */
+.search-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  background: #13131a;
+  border-bottom: 1px solid #2a2a3a;
+  flex-shrink: 0;
+}
+
+.search-icon { color: #6b7280; flex-shrink: 0; }
+
+.search-input {
+  flex: 1;
+  background: #0f0f13;
+  border: 1px solid #2a2a3a;
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-family: ui-monospace, monospace;
+  color: #d1d5db;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.search-input:focus { border-color: rgba(167, 139, 250, 0.5); }
+.search-input::placeholder { color: #4b4b6a; }
+
+.search-count {
+  font-size: 11px;
+  color: #6b7280;
+  white-space: nowrap;
+  font-family: ui-monospace, monospace;
+  min-width: 80px;
+}
+.search-count.no-match { color: #f87171; }
+
+.search-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  background: transparent;
+  border: none;
+  color: #6b7280;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: color 0.15s;
+  flex-shrink: 0;
+}
+.search-close:hover { color: #e0e0e0; }
+
+:deep(.search-mark) {
+  background: rgba(251, 191, 36, 0.3);
+  color: #fcd34d;
+  border-radius: 2px;
+  padding: 0 1px;
+}
+
+.btn-show-results {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  background: rgba(167, 139, 250, 0.1);
+  border: 1px solid rgba(167, 139, 250, 0.3);
+  border-radius: 5px;
+  color: #c4b5fd;
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s, border-color 0.15s;
+}
+.btn-show-results:hover,
+.btn-show-results.active { background: rgba(167, 139, 250, 0.2); border-color: rgba(167, 139, 250, 0.6); }
+
+.arrow-small { transition: transform 0.15s; transform: rotate(-90deg); }
+.arrow-small.expanded { transform: rotate(0deg); }
+
+/* ── Results panel ───────────────────────────────────────────── */
+.results-panel {
+  flex-shrink: 0;
+  height: 220px;
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid #2a2a3a;
+  background: #0d0d11;
+  overflow: hidden;
+}
+
+.results-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 14px;
+  background: #13131a;
+  border-bottom: 1px solid #2a2a3a;
+  flex-shrink: 0;
+}
+
+.results-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: #9ca3af;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.results-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 16px;
+  padding: 0 5px;
+  margin-left: 6px;
+  background: rgba(167, 139, 250, 0.15);
+  border-radius: 8px;
+  font-size: 10px;
+  color: #a78bfa;
+}
+
+.results-hint {
+  font-size: 10px;
+  color: #4b4b6a;
+}
+
+.results-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 4px 0;
+}
+
+.result-item {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 5px 14px;
+  font-family: 'JetBrains Mono', 'Fira Code', ui-monospace, monospace;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 0.1s;
+  white-space: nowrap;
+  overflow: hidden;
+}
+.result-item:hover { background: rgba(255,255,255,0.04); }
+
+.result-path {
+  color: #4b5563;
+  font-size: 11px;
+  flex-shrink: 0;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.result-sep { color: #3a3a52; font-size: 10px; flex-shrink: 0; }
+
+.result-key  { color: #93c5fd; flex-shrink: 0; }
+.result-key.is-match { color: #fcd34d; background: rgba(251,191,36,0.15); border-radius: 3px; padding: 0 3px; }
+
+.result-colon { color: #4b5563; flex-shrink: 0; }
+
+.result-value { color: #d1d5db; overflow: hidden; text-overflow: ellipsis; }
+.result-value.is-match { color: #fcd34d; background: rgba(251,191,36,0.15); border-radius: 3px; padding: 0 3px; }
+.rv-str  { color: #86efac; }
+.rv-num  { color: #fbbf24; }
+.rv-bool { color: #f472b6; }
+.rv-null { color: #a1a1b5; }
+.rv-arr, .rv-obj { color: #6b7280; font-style: italic; }
+
+.result-copied {
+  margin-left: 6px;
+  font-size: 10px;
+  color: #4ade80;
+  font-family: sans-serif;
+  flex-shrink: 0;
+}
+
+.results-slide-enter-active, .results-slide-leave-active { transition: height 0.2s ease, opacity 0.2s; overflow: hidden; }
+.results-slide-enter-from, .results-slide-leave-to { height: 0 !important; opacity: 0; }
+
+/* ── CSV Table ───────────────────────────────────────────────── */
+.csv-wrap { padding: 0; }
+
+.csv-table-container {
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+}
+
+.csv-table {
+  border-collapse: collapse;
+  font-family: 'JetBrains Mono', 'Fira Code', ui-monospace, monospace;
+  font-size: 12px;
+  white-space: nowrap;
+  min-width: 100%;
+}
+
+.csv-th-index,
+.csv-td-index {
+  width: 40px;
+  min-width: 40px;
+  text-align: center;
+  color: #5c5c80;
+  background: #13131a;
+  border-right: 1px solid #2a2a3a;
+  user-select: none;
+  position: sticky;
+  left: 0;
+  z-index: 1;
+}
+
+.csv-th {
+  padding: 8px 14px;
+  background: #16161d;
+  color: #a78bfa;
+  font-weight: 600;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  border-bottom: 2px solid #2a2a3a;
+  border-right: 1px solid #2a2a3a;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  white-space: nowrap;
+}
+
+.csv-th-index {
+  top: 0;
+  z-index: 3;
+  border-bottom: 2px solid #2a2a3a;
+  font-size: 11px;
+  padding: 8px 4px;
+}
+
+.csv-td {
+  padding: 6px 14px;
+  color: #d1d5db;
+  border-bottom: 1px solid #1e1e2a;
+  border-right: 1px solid #1e1e2a;
+  max-width: 280px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+  transition: background 0.1s;
+}
+
+.csv-td-index {
+  padding: 6px 4px;
+  border-bottom: 1px solid #1e1e2a;
+  font-size: 11px;
+}
+
+.csv-table tbody tr:hover .csv-td { background: rgba(255,255,255,0.03); }
+.csv-table tbody tr:hover .csv-td-index { background: #16161d; }
+
+.csv-td.v-bool  { color: #f472b6; }
+.csv-td.v-num   { color: #fbbf24; }
+.csv-td.v-empty { color: #3a3a52; }
+
+.btn-view-csv { color: #4ade80 !important; }
+.btn-view-csv.active { background: #4ade80 !important; color: #0f0f13 !important; }
+
+.btn-view-ts { color: #60a5fa !important; }
+.btn-view-ts.active { background: #60a5fa !important; color: #0f0f13 !important; }
+
+.ts-code {
+  display: block;
+  color: #d1d5db;
+  white-space: pre;
 }
 </style>
