@@ -394,6 +394,63 @@ my-tool/
 
 ## 10. AdSense 통합 패턴
 
+### 기본 원칙
+
+- **광고는 우측 사이드바에 배치한다** (3d-viewer 패턴 기준)
+- 하단 푸터/배너 배치는 사용하지 않는다
+- 모바일(≤768px)에서는 사이드바를 숨긴다
+
+### 우측 사이드바 레이아웃 (표준)
+
+```html
+<!-- Template -->
+<main class="main">
+  <div class="content-area">
+    <!-- 앱 본문 -->
+  </div>
+  <aside class="ad-sidebar">
+    <ins class="adsbygoogle"
+      style="display:block"
+      data-ad-client="ca-pub-1253318658034453"
+      data-ad-slot="XXXXXXXXXX"
+      data-ad-format="auto"
+      data-full-width-responsive="true"
+    />
+  </aside>
+</main>
+```
+
+```css
+.main {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+.content-area {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.ad-sidebar {
+  width: 300px;
+  flex-shrink: 0;
+  background: #16161d;
+  border-left: 1px solid #2a2a3a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+@media (max-width: 768px) {
+  .ad-sidebar { display: none; }
+}
+```
+
+### AdSense 스크립트 로드
+
 ```vue
 <script setup>
 import { onMounted } from 'vue'
@@ -415,11 +472,7 @@ onMounted(() => {
 </script>
 ```
 
-| 배치 유형 | 권장 위치 | `data-ad-format` |
-|---|---|---|
-| 가로 배너 | 콘텐츠 하단 | `horizontal` |
-| 우측 사이드바 | 메인 오른쪽 (300px) | `auto` |
-| 반응형 | 섹션 사이 | `auto` + `data-full-width-responsive="true"` |
+> **참고**: 3d-viewer가 이 패턴의 레퍼런스 구현체. 신규 앱 광고 배치 시 해당 파일 참조.
 
 ---
 
@@ -487,7 +540,151 @@ transition: opacity 0.3s ease;
 
 ---
 
-## 15. 체크리스트 (새 앱 출시 전)
+## 15. 도움말(Help) 작성 가이드
+
+모든 웹툴은 사용자가 기능을 즉시 파악할 수 있도록 도움말을 제공해야 한다.
+
+### 도움말 진입 방법
+
+헤더 우측에 `?` 버튼 → 모달 또는 드로어로 표시.
+
+```html
+<!-- 헤더 안 -->
+<button class="btn-help" title="도움말" @click="showHelp = true">
+  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+       stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="10"/>
+    <line x1="12" y1="16" x2="12" y2="12"/>
+    <line x1="12" y1="8" x2="12.01" y2="8"/>
+  </svg>
+</button>
+
+<!-- HelpModal 컴포넌트 (v-model로 열고 닫기) -->
+<HelpModal v-model="showHelp" />
+```
+
+### 도움말에 반드시 포함할 내용
+
+| 항목 | 설명 |
+|---|---|
+| **기능 개요** | 이 툴이 무엇을 하는지 1~2문장 |
+| **사용 방법** | 단계별 설명 (1. 입력 → 2. 버튼 클릭 → 3. 결과 확인) |
+| **각 모드/탭 설명** | 탭이 여러 개일 경우 각 탭의 역할 |
+| **키보드 단축키** | 단축키가 있는 경우 표로 정리 |
+| **지원 포맷** | 파일 업로드 기능이 있을 경우 |
+| **에러 메시지 안내** | 대표적인 에러 상황과 해결법 |
+
+### 도움말 모달 UI 패턴
+
+```vue
+<template>
+  <Teleport to="body">
+    <div v-if="modelValue" class="modal-overlay" @click.self="$emit('update:modelValue', false)">
+      <div class="modal">
+        <div class="modal-header">
+          <h2 class="modal-title">도움말</h2>
+          <button class="btn-close" @click="$emit('update:modelValue', false)">✕</button>
+        </div>
+        <div class="modal-body">
+          <!-- 내용 -->
+        </div>
+      </div>
+    </div>
+  </Teleport>
+</template>
+```
+
+```css
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  padding: 24px;
+}
+
+.modal {
+  background: #16161d;
+  border: 1px solid #2a2a3a;
+  border-radius: 12px;
+  width: 100%;
+  max-width: 560px;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid #2a2a3a;
+  flex-shrink: 0;
+}
+
+.modal-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #f0f0f5;
+}
+
+.modal-body {
+  padding: 20px;
+  overflow-y: auto;
+  font-size: 13px;
+  line-height: 1.7;
+  color: #e0e0e0;
+}
+
+.btn-close {
+  background: none;
+  border: none;
+  color: #6b7280;
+  font-size: 16px;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: color 0.15s, background 0.15s;
+}
+
+.btn-close:hover { color: #f0f0f5; background: #2a2a3a; }
+```
+
+### 도움말 내용 작성 예시 (Base64 Encoder 기준)
+
+```md
+## Base64 Encoder 도움말
+
+이 툴은 Base64 인코딩/디코딩, URL 인코딩/디코딩,
+이미지 → Base64 변환을 브라우저에서 바로 처리합니다.
+
+### 모드 설명
+- **Base64**: 텍스트를 Base64로 인코딩하거나 반대로 디코딩
+- **URL**: URL 특수문자를 인코딩/디코딩 (encodeURIComponent)
+- **Image → Base64**: 이미지 파일을 data URI로 변환
+
+### Variant (Base64 탭)
+| Variant | 특징 | 사용처 |
+|---|---|---|
+| Standard | +, /, = 패딩 | 일반 |
+| Base64url | -, _, 패딩 없음 | JWT, OAuth |
+| No Padding | = 없음 | Firebase, AWS |
+| MIME | 76자 줄바꿈 | 이메일 |
+
+### 키보드 단축키
+| 단축키 | 동작 |
+|---|---|
+| Ctrl + Enter | Encode |
+| Ctrl + Shift + Enter | Decode |
+```
+
+---
+
+## 16. 체크리스트 (새 앱 출시 전)
 
 - [ ] `index.html` — title, description, canonical, og tags, JSON-LD
 - [ ] `index.html` — `google-adsense-account` 메타태그
@@ -495,6 +692,8 @@ transition: opacity 0.3s ease;
 - [ ] `public/robots.txt` — Sitemap URL
 - [ ] `App.vue` — `isNotFound` 경로 체크
 - [ ] `App.vue` — `isMobile` 768px 체크
+- [ ] `App.vue` — AdSense 우측 사이드바 배치 (10번 패턴), 모바일 숨김
+- [ ] `HelpModal.vue` — 기능 개요, 사용법, 단축키 포함 (15번 가이드 참고)
 - [ ] `MobileBlock.vue` — 앱 이름, URL 반영
 - [ ] `NotFoundPage.vue` — 앱 이름, 홈 링크 반영
 - [ ] `netlify.toml` — base, publish, ignore 설정
