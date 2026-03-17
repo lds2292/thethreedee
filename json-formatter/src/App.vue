@@ -119,33 +119,56 @@
       <!-- Output Panel -->
       <div class="panel">
         <div class="panel-header">
-          <span class="panel-title">Output</span>
+          <div class="view-toggle">
+            <button class="btn-view-tab" :class="{ active: outputView === 'formatted' }" @click="outputView = 'formatted'">Formatted</button>
+            <button class="btn-view-tab" :class="{ active: outputView === 'tree' }" @click="outputView = 'tree'">Tree</button>
+          </div>
           <div class="panel-actions">
-            <button class="btn btn-ghost" :disabled="!output" title="Ctrl+Shift+S" @click="downloadOutput">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                <polyline points="7 10 12 15 17 10"/>
-                <line x1="12" y1="15" x2="12" y2="3"/>
-              </svg>
-              Download
-            </button>
-            <button class="btn btn-ghost" :disabled="!output" @click="copyOutput">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
-                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
-              </svg>
-              {{ copied ? 'Copied!' : 'Copy' }}
-            </button>
+            <template v-if="outputView === 'tree'">
+              <button class="btn btn-ghost" :disabled="!parsedJson" @click="expandSignal++">Expand All</button>
+              <button class="btn btn-ghost" :disabled="!parsedJson" @click="collapseSignal++">Collapse All</button>
+            </template>
+            <template v-else>
+              <button class="btn btn-ghost" :disabled="!output" title="Ctrl+Shift+S" @click="downloadOutput">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                  <polyline points="7 10 12 15 17 10"/>
+                  <line x1="12" y1="15" x2="12" y2="3"/>
+                </svg>
+                Download
+              </button>
+              <button class="btn btn-ghost" :disabled="!output" @click="copyOutput">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                </svg>
+                {{ copied ? 'Copied!' : 'Copy' }}
+              </button>
+            </template>
           </div>
         </div>
 
-        <div class="output-wrap">
+        <!-- Formatted View -->
+        <div v-if="outputView === 'formatted'" class="output-wrap">
           <pre class="output-pre" v-if="output"><code v-html="highlightedOutput" /></pre>
           <div v-else class="output-empty">
             <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" opacity="0.3">
               <polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>
             </svg>
             <span>Format 또는 Minify를 클릭하면<br>결과가 여기 표시됩니다</span>
+          </div>
+        </div>
+
+        <!-- Tree View -->
+        <div v-else class="output-wrap tree-wrap">
+          <div v-if="parsedJson !== null" class="tree-root">
+            <TreeNode :value="parsedJson" :depth="0" />
+          </div>
+          <div v-else class="output-empty">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" opacity="0.3">
+              <polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>
+            </svg>
+            <span>유효한 JSON을 입력하면<br>트리 구조가 표시됩니다</span>
           </div>
         </div>
 
@@ -158,7 +181,8 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
+import { ref, computed, watch, provide, onMounted, onBeforeUnmount } from 'vue'
+import TreeNode from './components/TreeNode.vue'
 
 const input = ref('')
 const output = ref('')
@@ -166,6 +190,19 @@ const error = ref('')
 const indent = ref(2)
 const copied = ref(false)
 const unescapeError = ref(false)
+
+// ── Tree View ─────────────────────────────────────────────────────
+const outputView     = ref('formatted') // 'formatted' | 'tree'
+const expandSignal   = ref(0)
+const collapseSignal = ref(0)
+provide('expandSignal',   expandSignal)
+provide('collapseSignal', collapseSignal)
+
+const parsedJson = computed(() => {
+  const src = output.value || input.value
+  if (!src?.trim()) return null
+  try { return JSON.parse(src) } catch { return null }
+})
 const textareaRef = ref(null)
 const lineNumRef = ref(null)
 
@@ -477,6 +514,33 @@ function loadSample() {
   align-items: center;
   gap: 4px;
 }
+
+.view-toggle {
+  display: flex;
+  gap: 2px;
+  background: #0f0f13;
+  border: 1px solid #2a2a3a;
+  border-radius: 7px;
+  padding: 2px;
+}
+
+.btn-view-tab {
+  padding: 3px 10px;
+  font-size: 11px;
+  font-weight: 500;
+  color: #6b7280;
+  background: transparent;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.btn-view-tab:hover  { color: #c4b5fd; }
+.btn-view-tab.active { background: #a78bfa; color: #0f0f13; }
+
+.tree-wrap { padding: 8px 0; }
+
+.tree-root { padding: 6px 4px; }
 
 /* ── Editor ──────────────────────────────────────────────────── */
 .editor-wrap {
