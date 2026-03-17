@@ -327,7 +327,7 @@ function loadSample() {
 
 .header-desc {
   font-size: 12px;
-  color: #4b5563;
+  color: #6b7280;
   letter-spacing: 0.05em;
 }
 
@@ -364,7 +364,7 @@ function loadSample() {
 .panel-title {
   font-size: 12px;
   font-weight: 600;
-  color: #6b7280;
+  color: #9ca3af;
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
@@ -401,7 +401,7 @@ function loadSample() {
   font-size: 13px;
   line-height: 22px;
   padding-right: 10px;
-  color: #3a3a52;
+  color: #5c5c80;
   user-select: none;
   display: block;
 }
@@ -456,7 +456,7 @@ function loadSample() {
   align-items: center;
   justify-content: center;
   gap: 16px;
-  color: #3a3a52;
+  color: #5c5c80;
   font-size: 13px;
   line-height: 1.8;
   text-align: center;
@@ -467,7 +467,7 @@ function loadSample() {
 :deep(.hl-str)  { color: #86efac; }
 :deep(.hl-num)  { color: #fbbf24; }
 :deep(.hl-bool) { color: #f472b6; }
-:deep(.hl-null) { color: #9ca3af; }
+:deep(.hl-null) { color: #a1a1b5; }
 
 /* ── Status bar ──────────────────────────────────────────────── */
 .status-bar {
@@ -484,7 +484,7 @@ function loadSample() {
 
 .stat {
   font-size: 11px;
-  color: #4b5563;
+  color: #6b7280;
   font-family: ui-monospace, monospace;
 }
 
@@ -534,7 +534,7 @@ function loadSample() {
 .indent-label {
   font-size: 10px;
   font-weight: 600;
-  color: #4b5563;
+  color: #6b7280;
   letter-spacing: 0.1em;
   text-transform: uppercase;
 }
@@ -553,7 +553,7 @@ function loadSample() {
   background: transparent;
   border: none;
   border-right: 1px solid #2a2a3a;
-  color: #6b7280;
+  color: #9ca3af;
   font-size: 12px;
   font-weight: 500;
   cursor: pointer;
@@ -604,7 +604,7 @@ function loadSample() {
 
 .btn-ghost {
   background: transparent;
-  color: #6b7280;
+  color: #9ca3af;
   border-color: #2a2a3a;
 }
 .btn-ghost:not(:disabled):hover {
