@@ -8,7 +8,8 @@ Netlify에서 각 앱마다 별도 사이트로 배포됩니다.
 | 폴더 | 도메인 | 설명 |
 |---|---|---|
 | `3d-viewer/` | threedeeview.site | STL·OBJ·GLTF·GLB 브라우저 3D 뷰어 |
-| `json-formatter/` | (예정) | JSON Formatter / Validator |
+| `json-formatter/` | json.toolzy.site | JSON Formatter / Validator |
+| `landing/` | toolzy.site | Toolzy 메인 랜딩 페이지 |
 
 ## 각 앱 실행
 
@@ -17,12 +18,15 @@ npm run dev     --prefix 3d-viewer
 npm run build   --prefix 3d-viewer
 npm run dev     --prefix json-formatter
 npm run build   --prefix json-formatter
+npm run dev     --prefix landing
+npm run build   --prefix landing
 ```
 
 ## Netlify 설정 (앱별)
 
 - **3d-viewer**: Base directory `3d-viewer`, Build `npm run build`, Publish `3d-viewer/dist`
 - **json-formatter**: Base directory `json-formatter`, Build `npm run build`, Publish `json-formatter/dist`
+- **landing**: Base directory `landing`, Build `npm run build`, Publish `landing/dist`
 
 ## 공통 사항
 
