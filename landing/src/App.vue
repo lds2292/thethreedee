@@ -71,6 +71,29 @@
             </svg>
           </div>
         </a>
+
+        <a class="card" href="https://base64.toolzy.site" target="_blank" rel="noopener">
+          <div class="card-bg">
+            <img :src="screenshots.base64Encoder" alt="Base64 Encoder preview" loading="lazy" />
+          </div>
+          <div class="card-icon">
+            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+              <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+            </svg>
+          </div>
+          <div class="card-body">
+            <h2 class="card-title">Base64 Encoder</h2>
+            <p class="card-desc">Base64 · URL · Image → Base64</p>
+            <span class="card-url">base64.toolzy.site</span>
+          </div>
+          <div class="card-arrow">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="5" y1="12" x2="19" y2="12"/>
+              <polyline points="12 5 19 12 12 19"/>
+            </svg>
+          </div>
+        </a>
       </div>
     </section>
 
@@ -91,6 +114,8 @@
       <a href="https://json.toolzy.site" target="_blank" rel="noopener">JSON Formatter</a>
       <span class="sep">·</span>
       <a href="https://3d-viewer.toolzy.site" target="_blank" rel="noopener">3D Viewer</a>
+      <span class="sep">·</span>
+      <a href="https://base64.toolzy.site" target="_blank" rel="noopener">Base64 Encoder</a>
     </footer>
   </div>
 </template>
@@ -106,6 +131,7 @@ const isNotFound = ref(false)
 const screenshots = {
   jsonFormatter: '/screenshots/json-formatter.jpg',
   viewer3d: '/screenshots/3d-viewer.jpg',
+  base64Encoder: '/screenshots/base64-encoder.jpg',
 }
 
 onMounted(() => {
@@ -217,6 +243,12 @@ onMounted(() => {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 24px;
+}
+
+@media (min-width: 960px) {
+  .cards {
+    grid-template-columns: 1fr 1fr 1fr;
+  }
 }
 
 .card {
