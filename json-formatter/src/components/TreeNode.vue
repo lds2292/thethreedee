@@ -45,6 +45,7 @@
         :depth="depth + 1"
         :is-array-index="isArray"
         :is-last="i === children.length - 1"
+        :initial-expanded="initialExpanded"
       />
       <!-- 닫는 괄호 -->
       <div class="node-row closing">
@@ -57,28 +58,25 @@
 </template>
 
 <script setup>
-import { ref, computed, inject, watch } from 'vue'
+import { ref, computed } from 'vue'
 
 const props = defineProps({
-  nodeKey:     { default: null },
-  value:       { required: true },
-  depth:       { type: Number, default: 0 },
-  isArrayIndex:{ type: Boolean, default: false },
-  isLast:      { type: Boolean, default: true },
+  nodeKey:        { default: null },
+  value:          { required: true },
+  depth:          { type: Number, default: 0 },
+  isArrayIndex:   { type: Boolean, default: false },
+  isLast:         { type: Boolean, default: true },
+  initialExpanded:{ default: null }, // null = depth 기준, true/false = 강제
 })
 
 const isArray      = computed(() => Array.isArray(props.value))
 const isExpandable = computed(() => props.value !== null && typeof props.value === 'object')
 
-// depth 1 이하는 기본 펼침, 그 이상은 접힘
-const expanded = ref(props.depth < 2)
+// initialExpanded가 지정되면 우선 적용, 없으면 depth 기준
+const expanded = ref(
+  props.initialExpanded !== null ? props.initialExpanded : props.depth < 2
+)
 function toggleExpand() { expanded.value = !expanded.value }
-
-// Expand All / Collapse All 신호 (App에서 provide)
-const expandSignal   = inject('expandSignal',   ref(0))
-const collapseSignal = inject('collapseSignal', ref(0))
-watch(expandSignal,   () => { if (isExpandable.value) expanded.value = true  })
-watch(collapseSignal, () => { if (isExpandable.value) expanded.value = false })
 
 // 자식 목록
 const children = computed(() => {

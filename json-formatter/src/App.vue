@@ -125,8 +125,8 @@
           </div>
           <div class="panel-actions">
             <template v-if="outputView === 'tree'">
-              <button class="btn btn-ghost" :disabled="!parsedJson" @click="expandSignal++">Expand All</button>
-              <button class="btn btn-ghost" :disabled="!parsedJson" @click="collapseSignal++">Collapse All</button>
+              <button class="btn btn-ghost" :disabled="!parsedJson" @click="expandAll">Expand All</button>
+              <button class="btn btn-ghost" :disabled="!parsedJson" @click="collapseAll">Collapse All</button>
             </template>
             <template v-else>
               <button class="btn btn-ghost" :disabled="!output" title="Ctrl+Shift+S" @click="downloadOutput">
@@ -162,7 +162,7 @@
         <!-- Tree View -->
         <div v-else class="output-wrap tree-wrap">
           <div v-if="parsedJson !== null" class="tree-root">
-            <TreeNode :value="parsedJson" :depth="0" />
+            <TreeNode :key="treeKey" :value="parsedJson" :depth="0" :initial-expanded="treeInitialExpanded" />
           </div>
           <div v-else class="output-empty">
             <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" opacity="0.3">
@@ -181,7 +181,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, provide, onMounted, onBeforeUnmount } from 'vue'
+import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
 import TreeNode from './components/TreeNode.vue'
 
 const input = ref('')
@@ -192,11 +192,12 @@ const copied = ref(false)
 const unescapeError = ref(false)
 
 // ── Tree View ─────────────────────────────────────────────────────
-const outputView     = ref('formatted') // 'formatted' | 'tree'
-const expandSignal   = ref(0)
-const collapseSignal = ref(0)
-provide('expandSignal',   expandSignal)
-provide('collapseSignal', collapseSignal)
+const outputView        = ref('formatted') // 'formatted' | 'tree'
+const treeKey           = ref(0)           // 변경 시 트리 전체 리마운트
+const treeInitialExpanded = ref(null)      // null=depth기준, true/false=강제
+
+function expandAll()   { treeInitialExpanded.value = true;  treeKey.value++ }
+function collapseAll() { treeInitialExpanded.value = false; treeKey.value++ }
 
 const parsedJson = computed(() => {
   const src = output.value || input.value
