@@ -279,18 +279,26 @@ function onUpload(e) {
 
 function loadSample() {
   input.value = JSON.stringify({
-    name: "3D Viewer",
-    version: "1.0.0",
-    features: ["STL", "OBJ", "GLTF", "GLB"],
-    settings: {
-      maxFileSize: "500MB",
-      darkMode: true,
-      autoRotate: false
+    "id": 1,
+    "name": "Jane Doe",
+    "email": "jane.doe@example.com",
+    "age": 28,
+    "verified": true,
+    "nickname": null,
+    "address": {
+      "street": "123 Lorem Street",
+      "city": "Ipsum City",
+      "country": "KR",
+      "zipcode": "06234"
     },
-    stats: {
-      users: 1024,
-      rating: 4.9
-    }
+    "tags": ["developer", "designer", "open-source"],
+    "scores": [98, 87, 73, 100],
+    "preferences": {
+      "theme": "dark",
+      "notifications": true,
+      "language": "ko"
+    },
+    "createdAt": "2024-01-15T09:30:00Z"
   }, null, 2)
   output.value = ''
 }
