@@ -103,7 +103,7 @@
         <div class="action-group">
           <button class="btn btn-ghost" :class="{ 'btn-error': unescapeError }" :disabled="!input" @click="unescapeJson" title="이스케이프된 JSON 문자열을 파싱해 Output에 표시">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="7 8 3 12 7 16"/><line x1="21" y1="12" x2="3" y2="12"/>
+              <polyline points="17 8 21 12 17 16"/><line x1="3" y1="12" x2="21" y2="12"/>
             </svg>
             {{ unescapeError ? 'Error!' : 'Unescape' }}
           </button>
