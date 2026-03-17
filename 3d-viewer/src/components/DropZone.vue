@@ -72,7 +72,7 @@ function onDrop(e) {
   if (file) processFile(file)
 }
 
-const MAX_FILE_BYTES = 500 * 1024 * 1024 // 500 MB
+const MAX_FILE_BYTES = 1024 * 1024 * 1024 // 1 GB
 
 async function checkMagicBytes(file, ext) {
   const slice = await file.slice(0, 512).arrayBuffer()
@@ -119,7 +119,7 @@ async function processFile(file) {
     return
   }
   if (file.size > MAX_FILE_BYTES) {
-    errorMsg.value = '파일 크기가 너무 큽니다 (최대 500 MB)'
+    errorMsg.value = '파일 크기가 너무 큽니다 (최대 1 GB)'
     return
   }
   const isValid = await checkMagicBytes(file, ext)

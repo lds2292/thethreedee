@@ -51,7 +51,7 @@ App.vue
 - ASCII STL: worker detects it and sends the buffer back; main thread falls back to Three.js `STLLoader`.
 - OBJ: worker decodes the text and sends it back; main thread uses `OBJLoader`.
 - GLTF/GLB: loaded on the main thread via `GLTFLoader`. External HTTP/HTTPS URIs inside GLTF files are blocked via `LoadingManager.setURLModifier`.
-- File size limit: 500 MB.
+- File size limit: 1 GB.
 
 **Model placement:** `centerAndFit()` computes the bounding box, normalizes the model to a ~3-unit scale, and repositions the camera accordingly.
 
