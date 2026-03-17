@@ -1,0 +1,29 @@
+# JSON Formatter
+> Free online JSON formatter, validator, minifier, and converter for developers.
+
+JSON Formatter is a browser-based developer tool available at https://json.toolzy.site.
+No installation or login required. All processing happens in the browser.
+
+## Features
+- **Format / Beautify**: Paste raw JSON and instantly format it with 2-space, 4-space, or tab indentation.
+- **Validate**: Real-time JSON validation with inline error messages.
+- **Minify**: Compress JSON by removing whitespace.
+- **Sort Keys**: Alphabetically sort all keys in a JSON object recursively.
+- **JSON to CSV**: Convert a JSON array of objects to CSV. Nested objects are flattened using dot-notation (e.g. role.admin).
+- **JSON to TypeScript**: Auto-generate TypeScript interfaces from JSON. Nested objects become separate interfaces.
+- **Tree View**: Explore JSON in an interactive collapsible tree. Supports Expand All / Collapse All.
+- **JSON Path Copy**: Hover any node in Tree View to copy its JSON path (e.g. $.address.city).
+- **Search**: Press Ctrl+F to search keys or values. Highlights matches in Formatted and Tree views. Shows a result panel with all matches.
+- **Escape / Unescape**: Escape JSON to a string literal or unescape a JSON string back to structured JSON.
+- **File Upload**: Upload a .json file directly into the editor.
+- **Download**: Download formatted output as .json, .csv, or .ts file.
+- **Keyboard Shortcuts**: Shift+Alt+F (Format), Ctrl+Shift+M (Minify), Ctrl+Shift+S (Download), Ctrl+F (Search).
+
+## Use Cases
+- Developers debugging API responses
+- Converting JSON data exports to CSV for spreadsheets
+- Generating TypeScript types from API response shapes
+- Exploring deeply nested JSON structures visually
+
+## URL
+https://json.toolzy.site

@@ -38,7 +38,7 @@
     <meta name="twitter:description" content="Free online JSON formatter, validator, minifier, and converter. No install needed.">
     <meta name="twitter:image" content="https://json.toolzy.site/og-image.jpg">
 
-    <!-- JSON-LD -->
+    <!-- JSON-LD: WebApplication -->
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
@@ -64,6 +64,64 @@
         "JSON Tree View",
         "JSON Path Copy",
         "JSON Search"
+      ],
+      "potentialAction": {
+        "@type": "UseAction",
+        "target": "https://json.toolzy.site"
+      },
+      "audience": {
+        "@type": "Audience",
+        "audienceType": "Software Developers"
+      }
+    }
+    </script>
+
+    <!-- JSON-LD: FAQ -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "How do I format JSON online?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Paste your JSON into the Input panel at json.toolzy.site and click the Format button. The formatted result appears instantly in the Output panel with syntax highlighting."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How do I convert JSON to CSV?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Paste a JSON array of objects into the Input panel and click 'JSON → CSV'. Nested objects are automatically flattened using dot-notation (e.g. role.admin). The result is shown as a table and can be downloaded as a .csv file."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How do I generate TypeScript interfaces from JSON?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Paste your JSON into the Input panel and click 'JSON → TS'. TypeScript interfaces are auto-generated. Nested objects become separate named interfaces."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Is this JSON formatter free?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes, JSON Formatter at json.toolzy.site is completely free. No login or installation required. All processing happens in your browser."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How do I validate JSON?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "JSON Formatter validates your JSON in real time as you type. Errors are shown in the status bar below the Input panel with a description of the issue."
+          }
+        }
       ]
     }
     </script>
