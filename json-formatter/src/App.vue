@@ -45,6 +45,7 @@
             spellcheck="false"
             autocomplete="off"
             @scroll="syncScroll"
+            @paste="onPaste"
           />
         </div>
 
@@ -76,13 +77,13 @@
         </div>
 
         <div class="action-group">
-          <button class="btn btn-primary" :disabled="!!error || !input" @click="format">
+          <button class="btn btn-primary" :disabled="!!error || !input" title="Shift+Alt+F" @click="format">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
               <line x1="21" y1="10" x2="7" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="21" y1="18" x2="7" y2="18"/>
             </svg>
             Format
           </button>
-          <button class="btn btn-ghost" :disabled="!!error || !input" @click="minify">
+          <button class="btn btn-ghost" :disabled="!!error || !input" title="Ctrl+Shift+M" @click="minify">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
               <polyline points="7 8 3 12 7 16"/><polyline points="17 8 21 12 17 16"/><line x1="14" y1="4" x2="10" y2="20"/>
             </svg>
@@ -96,6 +97,23 @@
             Sort Keys
           </button>
         </div>
+
+        <div class="action-divider" />
+
+        <div class="action-group">
+          <button class="btn btn-ghost" :disabled="!input" @click="unescapeJson" title="이중 인코딩된 JSON 문자열을 파싱">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="7 8 3 12 7 16"/><line x1="21" y1="12" x2="3" y2="12"/>
+            </svg>
+            Unescape
+          </button>
+          <button class="btn btn-ghost" :disabled="!!error || !input" @click="escapeJson" title="JSON을 이스케이프된 문자열로 변환">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="17 8 21 12 17 16"/><line x1="3" y1="12" x2="21" y2="12"/>
+            </svg>
+            Escape
+          </button>
+        </div>
       </div>
 
       <!-- Output Panel -->
@@ -103,6 +121,14 @@
         <div class="panel-header">
           <span class="panel-title">Output</span>
           <div class="panel-actions">
+            <button class="btn btn-ghost" :disabled="!output" title="Ctrl+Shift+S" @click="downloadOutput">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="7 10 12 15 17 10"/>
+                <line x1="12" y1="15" x2="12" y2="3"/>
+              </svg>
+              Download
+            </button>
             <button class="btn btn-ghost" :disabled="!output" @click="copyOutput">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                 <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
@@ -132,7 +158,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, nextTick } from 'vue'
+import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
 
 const input = ref('')
 const output = ref('')
@@ -276,6 +302,75 @@ function onUpload(e) {
   reader.readAsText(file)
   e.target.value = ''
 }
+
+// ── 붙여넣기 자동 포맷 ────────────────────────────────────────────
+function onPaste(e) {
+  const text = e.clipboardData?.getData('text') ?? ''
+  if (!text.trim()) return
+  try {
+    const parsed = JSON.parse(text)
+    e.preventDefault()
+    input.value = text
+    output.value = JSON.stringify(parsed, null, indent.value)
+  } catch {
+    // 유효하지 않은 JSON이면 그냥 붙여넣기 허용
+  }
+}
+
+// ── 다운로드 ──────────────────────────────────────────────────────
+function downloadOutput() {
+  if (!output.value) return
+  const blob = new Blob([output.value], { type: 'application/json' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = 'output.json'
+  a.click()
+  URL.revokeObjectURL(url)
+}
+
+// ── Escape / Unescape ─────────────────────────────────────────────
+function unescapeJson() {
+  if (!input.value.trim()) return
+  try {
+    // 입력이 JSON string literal인 경우 → 내부 값 추출
+    const parsed = JSON.parse(input.value)
+    if (typeof parsed === 'string') {
+      input.value = parsed
+      output.value = ''
+    }
+  } catch {
+    // 이미 이스케이프 처리된 문자열이면 직접 replace
+    try {
+      input.value = input.value
+        .replace(/^"|"$/g, '')
+        .replace(/\\"/g, '"')
+        .replace(/\\\\/g, '\\')
+        .replace(/\\n/g, '\n')
+        .replace(/\\t/g, '\t')
+      output.value = ''
+    } catch {}
+  }
+}
+
+function escapeJson() {
+  if (error.value || !input.value) return
+  output.value = JSON.stringify(input.value)
+}
+
+// ── 키보드 단축키 ─────────────────────────────────────────────────
+function onKeydown(e) {
+  const mod = e.ctrlKey || e.metaKey
+  // Shift+Alt+F → Format
+  if (e.shiftKey && e.altKey && e.key === 'F') { e.preventDefault(); format(); return }
+  // Ctrl/Cmd+Shift+M → Minify
+  if (mod && e.shiftKey && e.key === 'M') { e.preventDefault(); minify(); return }
+  // Ctrl/Cmd+Shift+S → Download
+  if (mod && e.shiftKey && e.key === 'S') { e.preventDefault(); downloadOutput(); return }
+}
+
+onMounted(() => document.addEventListener('keydown', onKeydown))
+onBeforeUnmount(() => document.removeEventListener('keydown', onKeydown))
 
 function loadSample() {
   input.value = JSON.stringify({
@@ -576,6 +671,12 @@ function loadSample() {
   flex-direction: column;
   gap: 6px;
   width: 100%;
+}
+
+.action-divider {
+  width: 100%;
+  height: 1px;
+  background: #2a2a3a;
 }
 
 /* ── Buttons ─────────────────────────────────────────────────── */
