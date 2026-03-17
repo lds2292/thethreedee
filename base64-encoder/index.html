@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- Title -->
+    <title>Base64 Encoder / Decoder — Free Online Tool</title>
+
+    <!-- Primary Meta -->
+    <meta name="description" content="Free online Base64 encoder and decoder, URL encoder/decoder, and image to Base64 converter. No install needed. All processing happens in your browser. / Base64 인코딩/디코딩, URL 인코딩, 이미지→Base64 변환을 브라우저에서 바로 사용하세요.">
+    <meta name="keywords" content="base64 encoder, base64 decoder, base64 online, URL encoder, URL decoder, image to base64, base64 converter, online encoder, base64 인코더, base64 디코더">
+    <meta name="robots" content="index, follow">
+    <meta name="author" content="toolzy">
+    <meta name="google-adsense-account" content="ca-pub-1253318658034453">
+
+    <!-- Canonical & hreflang -->
+    <link rel="canonical" href="https://base64.toolzy.site/">
+    <link rel="alternate" hreflang="ko" href="https://base64.toolzy.site/">
+    <link rel="alternate" hreflang="en" href="https://base64.toolzy.site/">
+    <link rel="alternate" hreflang="x-default" href="https://base64.toolzy.site/">
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://base64.toolzy.site/">
+    <meta property="og:title" content="Base64 Encoder / Decoder — Free Online Tool">
+    <meta property="og:description" content="Free online Base64 encoder/decoder, URL encoder/decoder, and image to Base64 converter. No install needed.">
+    <meta property="og:locale" content="ko_KR">
+    <meta property="og:locale:alternate" content="en_US">
+    <meta property="og:site_name" content="toolzy">
+    <meta property="og:image" content="https://base64.toolzy.site/og-image.jpg">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="Base64 Encoder / Decoder — Free Online Tool">
+    <meta name="twitter:description" content="Free online Base64 encoder/decoder, URL encoder/decoder, and image to Base64 converter. No install needed.">
+    <meta name="twitter:image" content="https://base64.toolzy.site/og-image.jpg">
+
+    <!-- JSON-LD: WebApplication -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "Base64 Encoder / Decoder",
+      "url": "https://base64.toolzy.site",
+      "description": "Free online Base64 encoder and decoder, URL encoder/decoder, and image to Base64 converter. All processing happens in your browser.",
+      "applicationCategory": "DeveloperApplication",
+      "operatingSystem": "Web Browser",
+      "inLanguage": ["ko", "en"],
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "featureList": [
+        "Base64 Encode",
+        "Base64 Decode",
+        "URL Encode",
+        "URL Decode",
+        "Image to Base64",
+        "UTF-8 Support",
+        "Copy to Clipboard",
+        "Download Result"
+      ],
+      "potentialAction": {
+        "@type": "UseAction",
+        "target": "https://base64.toolzy.site"
+      },
+      "audience": {
+        "@type": "Audience",
+        "audienceType": "Software Developers"
+      }
+    }
+    </script>
+
+    <!-- JSON-LD: FAQ -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "How do I encode text to Base64 online?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Go to base64.toolzy.site, select the Base64 tab, paste your text into the Input panel, and click Encode. The Base64 result appears instantly in the Output panel. UTF-8 and Korean characters are fully supported."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How do I decode a Base64 string?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Paste the Base64 string into the Input panel on base64.toolzy.site and click Decode. The original text is displayed in the Output panel. You can also use Ctrl+Shift+Enter as a keyboard shortcut."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How do I convert an image to Base64?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Select the 'Image → Base64' tab on base64.toolzy.site. Drag and drop your image or click Upload. The full Base64 data URL (data:image/...;base64,...) is generated instantly and can be copied or downloaded."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Is this Base64 tool free?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes, Base64 Encoder at base64.toolzy.site is completely free. No login or installation required. All encoding and decoding happens locally in your browser — your data is never sent to a server."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Does Base64 Encoder support Korean and Unicode characters?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes. The tool uses UTF-8 encoding (via encodeURIComponent/btoa) so Korean, Japanese, Chinese, emoji, and all Unicode characters are fully supported for both encoding and decoding."
+          }
+        }
+      ]
+    }
+    </script>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
