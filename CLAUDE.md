@@ -7,7 +7,7 @@ Netlify에서 각 앱마다 별도 사이트로 배포됩니다.
 
 | 폴더 | 도메인 | 설명 |
 |---|---|---|
-| `3d-viewer/` | threedeeview.site | STL·OBJ·GLTF·GLB 브라우저 3D 뷰어 |
+| `3d-viewer/` | 3d-viewer.toolzy.site | STL·OBJ·GLTF·GLB 브라우저 3D 뷰어 |
 | `json-formatter/` | json.toolzy.site | JSON Formatter / Validator |
 | `landing/` | toolzy.site | Toolzy 메인 랜딩 페이지 |
 

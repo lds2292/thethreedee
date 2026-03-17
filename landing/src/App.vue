@@ -26,6 +26,9 @@
     <section class="tools">
       <div class="cards">
         <a class="card" href="https://json.toolzy.site" target="_blank" rel="noopener">
+          <div class="card-bg">
+            <img :src="screenshots.jsonFormatter" alt="JSON Formatter preview" loading="lazy" />
+          </div>
           <div class="card-icon">
             <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
               <polyline points="16 18 22 12 16 6"/>
@@ -45,7 +48,10 @@
           </div>
         </a>
 
-        <a class="card" href="https://threedeeview.site" target="_blank" rel="noopener">
+        <a class="card" href="https://3d-viewer.toolzy.site" target="_blank" rel="noopener">
+          <div class="card-bg">
+            <img :src="screenshots.viewer3d" alt="3D Viewer preview" loading="lazy" />
+          </div>
           <div class="card-icon">
             <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
               <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
@@ -56,7 +62,7 @@
           <div class="card-body">
             <h2 class="card-title">3D Viewer</h2>
             <p class="card-desc">STL · OBJ · GLTF · GLB</p>
-            <span class="card-url">threedeeview.site</span>
+            <span class="card-url">3d-viewer.toolzy.site</span>
           </div>
           <div class="card-arrow">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -84,7 +90,7 @@
       <span class="sep">·</span>
       <a href="https://json.toolzy.site" target="_blank" rel="noopener">JSON Formatter</a>
       <span class="sep">·</span>
-      <a href="https://threedeeview.site" target="_blank" rel="noopener">3D Viewer</a>
+      <a href="https://3d-viewer.toolzy.site" target="_blank" rel="noopener">3D Viewer</a>
     </footer>
   </div>
 </template>
@@ -96,6 +102,11 @@ import NotFound from './components/NotFound.vue'
 
 const isMobile = ref(false)
 const isNotFound = ref(false)
+
+const screenshots = {
+  jsonFormatter: '/screenshots/json-formatter.jpg',
+  viewer3d: '/screenshots/3d-viewer.jpg',
+}
 
 onMounted(() => {
   const path = window.location.pathname.replace(/\/+$/, '') || '/'
@@ -209,6 +220,7 @@ onMounted(() => {
 }
 
 .card {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 20px;
@@ -218,12 +230,53 @@ onMounted(() => {
   padding: 28px 24px;
   text-decoration: none;
   color: inherit;
-  transition: border-color 0.15s, transform 0.15s;
+  overflow: hidden;
+  transition: border-color 0.2s, transform 0.2s;
 }
 
 .card:hover {
   border-color: rgba(167, 139, 250, 0.5);
   transform: translateY(-2px);
+}
+
+/* 배경 스크린샷 레이어 */
+.card-bg {
+  position: absolute;
+  top: 0; right: 0; bottom: 0;
+  width: 55%;
+  transform: translateX(100%);
+  transition: transform 0.45s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  pointer-events: none;
+}
+
+.card:hover .card-bg {
+  transform: translateX(0);
+}
+
+/* 왼쪽 그라데이션 블렌딩 */
+.card-bg::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; bottom: 0;
+  width: 60%;
+  background: linear-gradient(to right, #16161d 10%, transparent 100%);
+  z-index: 1;
+}
+
+.card-bg img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top left;
+  display: block;
+  opacity: 0.5;
+}
+
+.card-icon,
+.card-body,
+.card-arrow {
+  position: relative;
+  z-index: 1;
 }
 
 .card-icon {
@@ -288,7 +341,6 @@ onMounted(() => {
   font-size: 13px;
   color: #6b7280;
   border-top: 1px solid #2a2a3a;
-  margin-top: 64px;
   display: flex;
   align-items: center;
   justify-content: center;
