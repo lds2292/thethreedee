@@ -62,6 +62,14 @@
 
         <div class="status-bar">
           <span class="stat">{{ inputStats }}</span>
+          <span v-if="sizeWarning && !error" class="size-warning-badge">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            대용량 파일 — 처리 시 시간이 걸릴 수 있습니다
+          </span>
+          <span v-if="isOutputLarge" class="size-warning-badge">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            200KB 초과 — 하이라이팅 비활성화됨
+          </span>
           <span v-if="error" class="error-badge">
             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12" y2="16"/></svg>
             {{ error }}
@@ -361,11 +369,15 @@ const searchTerm       = ref('')
 const searchInputRef   = ref(null)
 const copiedResultIndex = ref(-1)
 
+const LARGE_INPUT_THRESHOLD  = 500 * 1024  // 500KB — 경고
+const HIGHLIGHT_MAX_BYTES    = 200 * 1024  // 200KB — 하이라이팅 비활성화
+
 const input = ref('')
 const output = ref('')
 const error = ref('')
 const indent = ref(2)
 const copied = ref(false)
+const sizeWarning = ref(false)
 const unescapeError = ref(false)
 const csvError = ref(false)
 const outputFormat = ref('json') // 'json' | 'csv'
@@ -395,17 +407,21 @@ const indentOptions = [
   { label: 'Tab', value: '\t' },
 ]
 
-// ── 실시간 유효성 검사 ────────────────────────────────────────────
+// ── 실시간 유효성 검사 (debounce 300ms) ──────────────────────────
+let validationTimer = null
 watch(input, (val) => {
+  sizeWarning.value = new Blob([val]).size >= LARGE_INPUT_THRESHOLD
+  clearTimeout(validationTimer)
   if (!val.trim()) { error.value = ''; return }
-  try {
-    JSON.parse(val)
-    error.value = ''
-  } catch (e) {
-    // "JSON.parse: ..." 또는 "Unexpected token..." 형태에서 간결하게 추출
-    const msg = e.message.replace(/^JSON\.parse:\s*/i, '').replace(/\s+at\s+.+$/, '')
-    error.value = msg.length > 60 ? msg.slice(0, 60) + '…' : msg
-  }
+  validationTimer = setTimeout(() => {
+    try {
+      JSON.parse(val)
+      error.value = ''
+    } catch (e) {
+      const msg = e.message.replace(/^JSON\.parse:\s*/i, '').replace(/\s+at\s+.+$/, '')
+      error.value = msg.length > 60 ? msg.slice(0, 60) + '…' : msg
+    }
+  }, 300)
 })
 
 // ── 줄 번호 ──────────────────────────────────────────────────────
@@ -507,9 +523,19 @@ async function copyResultPath(path) {
   } catch {}
 }
 
-// ── 신택스 하이라이팅 ─────────────────────────────────────────────
+// ── 신택스 하이라이팅 (200KB 초과 시 plain text) ──────────────────
+const isOutputLarge = computed(() => new Blob([output.value]).size > HIGHLIGHT_MAX_BYTES)
+
 const highlightedOutput = computed(() => {
   if (!output.value) return ''
+  if (isOutputLarge.value) {
+    // 대용량: 하이라이팅 없이 HTML 이스케이프만
+    const plain = output.value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    return searchTerm.value
+      ? plain.replace(new RegExp(searchTerm.value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi'),
+          m => `<mark class="search-mark">${m}</mark>`)
+      : plain
+  }
   let html = highlightJson(output.value)
   if (searchTerm.value) {
     const escaped = searchTerm.value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
@@ -940,6 +966,7 @@ function loadSample() {
 .btn-view-tab.active { background: #a78bfa; color: #0f0f13; }
 
 .tree-wrap { padding: 8px 0; }
+.output-wrap.tree-wrap { overflow: auto; }
 
 .tree-root { padding: 6px 4px; }
 
@@ -1070,6 +1097,16 @@ function loadSample() {
   font-size: 11px;
   color: #6b7280;
   font-family: ui-monospace, monospace;
+}
+
+.size-warning-badge {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  color: #f59e0b;
+  font-family: ui-monospace, monospace;
+  white-space: nowrap;
 }
 
 .error-badge {
