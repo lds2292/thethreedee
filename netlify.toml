@@ -31,6 +31,11 @@
   to   = "/regex/"
   status = 301
 
+[[redirects]]
+  from = "/cron"
+  to   = "/cron/"
+  status = 301
+
 # SPA catch-all per app
 [[redirects]]
   from = "/3d-viewer/*"
@@ -50,6 +55,11 @@
 [[redirects]]
   from = "/regex/*"
   to   = "/regex/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/cron/*"
+  to   = "/cron/index.html"
   status = 200
 
 # Landing catch-all (404 handling)

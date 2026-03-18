@@ -39,7 +39,6 @@
             <h2 class="card-title">JSON Formatter</h2>
             <p class="card-desc">Format · Validate · Minify · Convert</p>
             <p class="card-detail">JSON을 보기 좋게 포맷하고 문법 오류를 실시간으로 검증합니다. 트리 뷰, 키 정렬, CSV·TypeScript 변환까지 하나의 도구로.</p>
-            <span class="card-url">toolzy.site/json/</span>
           </div>
           <div class="card-arrow">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -64,7 +63,6 @@
             <h2 class="card-title">3D Viewer</h2>
             <p class="card-desc">STL · OBJ · GLTF · GLB</p>
             <p class="card-detail">STL, OBJ, GLTF, GLB 파일을 브라우저에서 바로 렌더링합니다. 회전·확대·조명 조절과 와이어프레임 모드, 스크린샷 저장 지원.</p>
-            <span class="card-url">toolzy.site/3d-viewer/</span>
           </div>
           <div class="card-arrow">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -88,7 +86,6 @@
             <h2 class="card-title">Base64 Encoder</h2>
             <p class="card-desc">Base64 · URL · Image → Base64</p>
             <p class="card-detail">텍스트·URL·이미지를 Base64로 인코딩하거나 디코딩합니다. Standard, Base64url, MIME 등 다양한 Variant와 한글을 포함한 UTF-8 완전 지원.</p>
-            <span class="card-url">toolzy.site/encode/</span>
           </div>
           <div class="card-arrow">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -113,7 +110,29 @@
             <h2 class="card-title">Regex Tester</h2>
             <p class="card-desc">Test · Match · Replace</p>
             <p class="card-detail">정규식을 실시간으로 테스트하고 매칭을 하이라이트로 시각화합니다. 캡처 그룹, 플래그 토글, Replace All, 자주 쓰는 패턴 모음 제공.</p>
-            <span class="card-url">toolzy.site/regex/</span>
+          </div>
+          <div class="card-arrow">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="5" y1="12" x2="19" y2="12"/>
+              <polyline points="12 5 19 12 12 19"/>
+            </svg>
+          </div>
+        </a>
+
+        <a class="card" href="/cron/">
+          <div class="card-bg">
+            <img v-if="screenshots.cronTester" :src="screenshots.cronTester" alt="Cron Tester preview" loading="lazy" />
+          </div>
+          <div class="card-icon">
+            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"/>
+              <polyline points="12 6 12 12 16 14"/>
+            </svg>
+          </div>
+          <div class="card-body">
+            <h2 class="card-title">Cron Tester</h2>
+            <p class="card-desc">Validate · Describe · Preview</p>
+            <p class="card-detail">cron 표현식을 실시간으로 검증하고 한국어 설명을 제공합니다. 다음 실행 시간 10개 미리보기, 5-field/6-field 포맷 전환, 자주 쓰는 프리셋 제공.</p>
           </div>
           <div class="card-arrow">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -146,6 +165,8 @@
       <a href="/encode/">Base64 Encoder</a>
       <span class="sep">·</span>
       <a href="/regex/">Regex Tester</a>
+      <span class="sep">·</span>
+      <a href="/cron/">Cron Tester</a>
     </footer>
   </div>
 </template>
@@ -163,6 +184,7 @@ const screenshots = {
   viewer3d: '/screenshots/3d-viewer.jpg',
   base64Encoder: '/screenshots/base64-encoder.jpg',
   regexTester: '/screenshots/regex-tester.jpg',
+  cronTester: '/screenshots/cron-tester.jpg',
 }
 
 onMounted(() => {
@@ -365,16 +387,6 @@ onMounted(() => {
   color: #9ca3af;
   line-height: 1.65;
   margin-bottom: 14px;
-}
-
-.card-url {
-  font-size: 12px;
-  font-family: monospace;
-  color: #a78bfa;
-  background: rgba(167, 139, 250, 0.1);
-  border: 1px solid rgba(167, 139, 250, 0.2);
-  border-radius: 4px;
-  padding: 2px 8px;
 }
 
 .card-arrow {
