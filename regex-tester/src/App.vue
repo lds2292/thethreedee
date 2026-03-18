@@ -48,7 +48,19 @@
           >{{ flag }}</button>
         </div>
         <div class="pattern-bar-right">
-          <div class="quick-patterns-wrap" ref="quickPatternsWrapRef">
+          <button
+          class="code-snippet-btn"
+          @click="showSnippet = true"
+          :disabled="!pattern || !!regexError"
+          title="Generate Code Snippet"
+        >
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="16 18 22 12 16 6"/>
+            <polyline points="8 6 2 12 8 18"/>
+          </svg>
+          Code Snippet
+        </button>
+        <div class="quick-patterns-wrap" ref="quickPatternsWrapRef">
             <button class="quick-btn" @click="quickOpen = !quickOpen">
               Quick Patterns
               <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
@@ -216,6 +228,43 @@
       </div>
     </main>
 
+    <!-- Code Snippet modal -->
+    <Teleport to="body">
+      <div v-if="showSnippet" class="modal-backdrop" @click.self="showSnippet = false">
+        <div class="modal snippet-modal">
+          <div class="modal-header">
+            <h2>Code Snippet</h2>
+            <button class="modal-close" @click="showSnippet = false">✕</button>
+          </div>
+          <div class="snippet-tabs">
+            <button
+              v-for="lang in snippetLangs"
+              :key="lang.id"
+              class="snippet-tab"
+              :class="{ active: snippetLang === lang.id }"
+              @click="snippetLang = lang.id"
+            >{{ lang.label }}</button>
+          </div>
+          <div class="snippet-body">
+            <div class="snippet-header-bar">
+              <span class="snippet-lang-label">{{ snippetLangs.find(l => l.id === snippetLang)?.label }}</span>
+              <button class="copy-snippet-btn" @click="copyToClipboard(snippetCode, 'snippet')">
+                <span v-if="copiedKey === 'snippet'" style="color:#34d399">Copied!</span>
+                <template v-else>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="9" y="9" width="13" height="13" rx="2"/>
+                    <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
+                  </svg>
+                  Copy
+                </template>
+              </button>
+            </div>
+            <pre class="snippet-code"><code>{{ snippetCode }}</code></pre>
+          </div>
+        </div>
+      </div>
+    </Teleport>
+
     <!-- Help modal -->
     <Teleport to="body">
       <div v-if="showHelp" class="modal-backdrop" @click.self="showHelp = false">
@@ -296,7 +345,121 @@ const flagDescriptions = {
 }
 const quickOpen = ref(false)
 const showHelp = ref(false)
+const showSnippet = ref(false)
+const snippetLang = ref('js')
 const copiedKey = ref(null)
+
+const snippetLangs = [
+  { id: 'js',     label: 'JavaScript' },
+  { id: 'ts',     label: 'TypeScript' },
+  { id: 'java',   label: 'Java' },
+  { id: 'python', label: 'Python' },
+]
+
+function escapeForJsLiteral(str) {
+  return str.replace(/\//g, '\\/')
+}
+
+function escapeForString(str) {
+  return str
+    .replace(/\\/g, '\\\\')
+    .replace(/"/g, '\\"')
+    .replace(/\n/g, '\\n')
+    .replace(/\r/g, '\\r')
+    .replace(/\t/g, '\\t')
+}
+
+const snippetCode = computed(() => {
+  const p = pattern.value
+  if (!p) return '// Enter a pattern first'
+
+  const flags = activeFlags.value.join('')
+  const replace = replaceWith.value || 'replacement'
+
+  if (snippetLang.value === 'js') {
+    const lit = escapeForJsLiteral(p)
+    const rep = escapeForString(replace)
+    return `const regex = /${lit}/${flags};
+const str = "your string here";
+
+// Test if pattern matches
+const isMatch = regex.test(str);
+
+// Get all matches
+const matches = str.match(regex);
+
+// Replace matches
+const result = str.replace(regex, "${rep}");`
+  }
+
+  if (snippetLang.value === 'ts') {
+    const lit = escapeForJsLiteral(p)
+    const rep = escapeForString(replace)
+    return `const regex: RegExp = /${lit}/${flags};
+const str: string = "your string here";
+
+// Test if pattern matches
+const isMatch: boolean = regex.test(str);
+
+// Get all matches
+const matches: RegExpMatchArray | null = str.match(regex);
+
+// Replace matches
+const result: string = str.replace(regex, "${rep}");`
+  }
+
+  if (snippetLang.value === 'java') {
+    const javaFlags = []
+    if (flags.includes('i')) javaFlags.push('Pattern.CASE_INSENSITIVE')
+    if (flags.includes('m')) javaFlags.push('Pattern.MULTILINE')
+    if (flags.includes('s')) javaFlags.push('Pattern.DOTALL')
+    const flagStr = javaFlags.length > 0 ? ` | ${javaFlags.join(' | ')}` : ''
+    const ep = escapeForString(p)
+    const rep = escapeForString(replace)
+    return `import java.util.regex.*;
+
+Pattern pattern = Pattern.compile("${ep}"${flagStr ? `, ${flagStr.trim()}` : ''});
+String str = "your string here";
+Matcher matcher = pattern.matcher(str);
+
+// Test if pattern matches
+boolean isMatch = matcher.find();
+
+// Find all matches
+matcher.reset();
+while (matcher.find()) {
+    System.out.println(matcher.group());
+}
+
+// Replace all matches
+String result = str.replaceAll("${ep}", "${rep}");`
+  }
+
+  if (snippetLang.value === 'python') {
+    const pyFlags = []
+    if (flags.includes('i')) pyFlags.push('re.IGNORECASE')
+    if (flags.includes('m')) pyFlags.push('re.MULTILINE')
+    if (flags.includes('s')) pyFlags.push('re.DOTALL')
+    const flagStr = pyFlags.length > 0 ? `, ${pyFlags.join(' | ')}` : ''
+    const ep = escapeForString(p)
+    const rep = escapeForString(replace)
+    return `import re
+
+pattern = re.compile(r"${ep}"${flagStr})
+text = "your string here"
+
+# Test if pattern matches
+is_match = bool(pattern.search(text))
+
+# Find all matches
+matches = pattern.findall(text)
+
+# Replace all matches
+result = pattern.sub(r"${rep}", text)`
+  }
+
+  return ''
+})
 
 // Refs
 const textareaRef = ref(null)
@@ -651,6 +814,125 @@ Numbers: 42, -3.14, 1000, 0.5`
   align-items: center;
   gap: 8px;
   flex-shrink: 0;
+}
+
+/* Code Snippet Button */
+.code-snippet-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0 12px;
+  height: 32px;
+  border-radius: 6px;
+  border: 1px solid #2a2a3a;
+  background: transparent;
+  color: #9ca3af;
+  font-size: 12px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s;
+  flex-shrink: 0;
+}
+.code-snippet-btn:hover:not(:disabled) {
+  border-color: #a78bfa;
+  color: #a78bfa;
+}
+.code-snippet-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+/* Snippet Modal */
+.snippet-modal {
+  max-width: 640px;
+}
+
+.snippet-tabs {
+  display: flex;
+  gap: 2px;
+  padding: 10px 14px 0;
+  border-bottom: 1px solid #2a2a3a;
+  flex-shrink: 0;
+}
+
+.snippet-tab {
+  padding: 6px 14px;
+  border: none;
+  border-radius: 6px 6px 0 0;
+  background: transparent;
+  color: #6b7280;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+}
+.snippet-tab:hover {
+  color: #d1d5db;
+}
+.snippet-tab.active {
+  color: #a78bfa;
+  border-bottom-color: #a78bfa;
+  background: rgba(167, 139, 250, 0.06);
+}
+
+.snippet-body {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.snippet-header-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 16px;
+  flex-shrink: 0;
+}
+
+.snippet-lang-label {
+  font-size: 11px;
+  color: #4b5563;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.copy-snippet-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 12px;
+  height: 28px;
+  border-radius: 5px;
+  border: 1px solid #2a2a3a;
+  background: transparent;
+  color: #9ca3af;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.copy-snippet-btn:hover {
+  border-color: #a78bfa;
+  color: #a78bfa;
+}
+
+.snippet-code {
+  flex: 1;
+  overflow: auto;
+  margin: 0;
+  padding: 16px;
+  background: #0f0f13;
+  border-top: 1px solid #2a2a3a;
+  font-family: 'JetBrains Mono', 'Fira Code', ui-monospace, monospace;
+  font-size: 12.5px;
+  line-height: 1.7;
+  color: #d1d5db;
+  white-space: pre;
+  tab-size: 4;
 }
 
 /* Quick Patterns */
