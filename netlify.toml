@@ -1,5 +1,5 @@
 [build]
-  command = "npm run build:all"
+  command = "npm run install:all && npm run build:all"
   publish = "dist"
 
 [build.environment]

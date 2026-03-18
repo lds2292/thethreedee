@@ -1,7 +1,8 @@
 {
   "scripts": {
+    "install:all": "npm install --prefix landing && npm install --prefix 3d-viewer && npm install --prefix json-formatter && npm install --prefix base64-encoder && npm install --prefix regex-tester",
     "build:all": "npm run build --prefix landing && npm run build --prefix 3d-viewer && npm run build --prefix json-formatter && npm run build --prefix base64-encoder && npm run build --prefix regex-tester && node scripts/merge-dist.js",
-    "preview": "npm run build:all && npx netlify-cli dev --dir dist",
+    "preview": "npm run install:all && npm run build:all && npx netlify-cli dev --dir dist",
     "serve": "npx netlify-cli dev --dir dist"
   }
 }
