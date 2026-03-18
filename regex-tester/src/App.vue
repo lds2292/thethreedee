@@ -352,8 +352,15 @@ const copiedKey = ref(null)
 const snippetLangs = [
   { id: 'js',     label: 'JavaScript' },
   { id: 'ts',     label: 'TypeScript' },
+  { id: 'kotlin', label: 'Kotlin' },
   { id: 'java',   label: 'Java' },
+  { id: 'csharp', label: 'C#' },
   { id: 'python', label: 'Python' },
+  { id: 'go',     label: 'Go' },
+  { id: 'rust',   label: 'Rust' },
+  { id: 'swift',  label: 'Swift' },
+  { id: 'php',    label: 'PHP' },
+  { id: 'ruby',   label: 'Ruby' },
 ]
 
 function escapeForJsLiteral(str) {
@@ -367,6 +374,16 @@ function escapeForString(str) {
     .replace(/\n/g, '\\n')
     .replace(/\r/g, '\\r')
     .replace(/\t/g, '\\t')
+}
+
+function escapeSingleQuote(str) {
+  return str.replace(/\\/g, '\\\\').replace(/'/g, "\\'")
+}
+
+// Build Go/Rust inline flag prefix: (?ims)
+function inlineFlags(flags) {
+  const f = ['i', 'm', 's'].filter(c => flags.includes(c)).join('')
+  return f ? `(?${f})` : ''
 }
 
 const snippetCode = computed(() => {
@@ -408,17 +425,38 @@ const matches: RegExpMatchArray | null = str.match(regex);
 const result: string = str.replace(regex, "${rep}");`
   }
 
+  if (snippetLang.value === 'kotlin') {
+    const opts = []
+    if (flags.includes('i')) opts.push('RegexOption.IGNORE_CASE')
+    if (flags.includes('m')) opts.push('RegexOption.MULTILINE')
+    if (flags.includes('s')) opts.push('RegexOption.DOT_MATCHES_ALL')
+    const optStr = opts.length > 0 ? `, setOf(${opts.join(', ')})` : ''
+    const ep = escapeForString(p)
+    const rep = escapeForString(replace)
+    return `val regex = Regex("""${ep}"""${optStr})
+val str = "your string here"
+
+// Test if pattern matches
+val isMatch = regex.containsMatchIn(str)
+
+// Find all matches
+val matches = regex.findAll(str).toList()
+
+// Replace all matches
+val result = regex.replace(str, "${rep}")`
+  }
+
   if (snippetLang.value === 'java') {
     const javaFlags = []
     if (flags.includes('i')) javaFlags.push('Pattern.CASE_INSENSITIVE')
     if (flags.includes('m')) javaFlags.push('Pattern.MULTILINE')
     if (flags.includes('s')) javaFlags.push('Pattern.DOTALL')
-    const flagStr = javaFlags.length > 0 ? ` | ${javaFlags.join(' | ')}` : ''
+    const flagStr = javaFlags.length > 0 ? `, ${javaFlags.join(' | ')}` : ''
     const ep = escapeForString(p)
     const rep = escapeForString(replace)
     return `import java.util.regex.*;
 
-Pattern pattern = Pattern.compile("${ep}"${flagStr ? `, ${flagStr.trim()}` : ''});
+Pattern pattern = Pattern.compile("${ep}"${flagStr});
 String str = "your string here";
 Matcher matcher = pattern.matcher(str);
 
@@ -433,6 +471,33 @@ while (matcher.find()) {
 
 // Replace all matches
 String result = str.replaceAll("${ep}", "${rep}");`
+  }
+
+  if (snippetLang.value === 'csharp') {
+    const csFlags = []
+    if (flags.includes('i')) csFlags.push('RegexOptions.IgnoreCase')
+    if (flags.includes('m')) csFlags.push('RegexOptions.Multiline')
+    if (flags.includes('s')) csFlags.push('RegexOptions.Singleline')
+    const flagStr = csFlags.length > 0 ? `, ${csFlags.join(' | ')}` : ''
+    const ep = escapeForString(p)
+    const rep = escapeForString(replace)
+    return `using System.Text.RegularExpressions;
+
+var regex = new Regex(@"${ep}"${flagStr});
+var str = "your string here";
+
+// Test if pattern matches
+bool isMatch = regex.IsMatch(str);
+
+// Find all matches
+var matches = regex.Matches(str);
+foreach (Match m in matches)
+{
+    Console.WriteLine(m.Value);
+}
+
+// Replace all matches
+string result = regex.Replace(str, "${rep}");`
   }
 
   if (snippetLang.value === 'python') {
@@ -456,6 +521,115 @@ matches = pattern.findall(text)
 
 # Replace all matches
 result = pattern.sub(r"${rep}", text)`
+  }
+
+  if (snippetLang.value === 'go') {
+    const prefix = inlineFlags(flags)
+    const ep = escapeForString(p)
+    const rep = escapeForString(replace)
+    return `import (
+    "fmt"
+    "regexp"
+)
+
+regex := regexp.MustCompile(\`${prefix}${ep}\`)
+str := "your string here"
+
+// Test if pattern matches
+isMatch := regex.MatchString(str)
+
+// Find all matches
+matches := regex.FindAllString(str, -1)
+fmt.Println(matches)
+
+// Replace all matches
+result := regex.ReplaceAllString(str, "${rep}")`
+  }
+
+  if (snippetLang.value === 'rust') {
+    const prefix = inlineFlags(flags)
+    const ep = escapeForString(p)
+    const rep = escapeForString(replace)
+    return `use regex::Regex;
+
+let regex = Regex::new(r"${prefix}${ep}").unwrap();
+let str = "your string here";
+
+// Test if pattern matches
+let is_match = regex.is_match(str);
+
+// Find all matches
+let matches: Vec<&str> = regex.find_iter(str)
+    .map(|m| m.as_str())
+    .collect();
+
+// Replace all matches
+let result = regex.replace_all(str, "${rep}");`
+  }
+
+  if (snippetLang.value === 'swift') {
+    const swiftOpts = []
+    if (flags.includes('i')) swiftOpts.push('.caseInsensitive')
+    if (flags.includes('m')) swiftOpts.push('.anchorsMatchLines')
+    if (flags.includes('s')) swiftOpts.push('.dotMatchesLineSeparators')
+    const optStr = swiftOpts.length > 0 ? `[${swiftOpts.join(', ')}]` : '[]'
+    const ep = escapeForString(p)
+    const rep = escapeForString(replace)
+    return `import Foundation
+
+let str = "your string here"
+let regex = try! NSRegularExpression(pattern: "${ep}", options: ${optStr})
+let range = NSRange(str.startIndex..., in: str)
+
+// Test if pattern matches
+let isMatch = regex.firstMatch(in: str, range: range) != nil
+
+// Find all matches
+let matches = regex.matches(in: str, range: range)
+    .compactMap { Range($0.range, in: str).map { String(str[$0]) } }
+
+// Replace all matches
+let result = regex.stringByReplacingMatches(in: str, range: range, withTemplate: "${rep}")`
+  }
+
+  if (snippetLang.value === 'php') {
+    const phpFlags = ['i', 'm', 's'].filter(c => flags.includes(c)).join('')
+    const ep = escapeSingleQuote(p)
+    const rep = escapeSingleQuote(replace)
+    return `<?php
+
+$pattern = '/${ep}/${phpFlags}';
+$str = "your string here";
+
+// Test if pattern matches
+$isMatch = preg_match($pattern, $str) === 1;
+
+// Get all matches
+preg_match_all($pattern, $str, $matchGroups);
+$matches = $matchGroups[0];
+
+// Replace all matches
+$result = preg_replace($pattern, '${rep}', $str);`
+  }
+
+  if (snippetLang.value === 'ruby') {
+    const rubyFlags = []
+    if (flags.includes('i')) rubyFlags.push('i')
+    if (flags.includes('m')) rubyFlags.push('m')  // dotall in Ruby
+    const flagStr = rubyFlags.length > 0 ? rubyFlags.join('') : ''
+    const ep = escapeSingleQuote(p)
+    const rep = escapeSingleQuote(replace)
+    return `regex = /${ep}/${flagStr}
+str = "your string here"
+
+# Test if pattern matches
+is_match = regex.match?(str)
+
+# Find all matches
+matches = str.scan(regex)
+
+# Replace all matches
+result = str.gsub(regex, '${rep}')`
   }
 
   return ''
@@ -853,6 +1027,11 @@ Numbers: 42, -3.14, 1000, 0.5`
   padding: 10px 14px 0;
   border-bottom: 1px solid #2a2a3a;
   flex-shrink: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.snippet-tabs::-webkit-scrollbar {
+  display: none;
 }
 
 .snippet-tab {
@@ -867,6 +1046,8 @@ Numbers: 42, -3.14, 1000, 0.5`
   transition: all 0.15s;
   border-bottom: 2px solid transparent;
   margin-bottom: -1px;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 .snippet-tab:hover {
   color: #d1d5db;
