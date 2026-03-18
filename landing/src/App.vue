@@ -97,6 +97,31 @@
             </svg>
           </div>
         </a>
+
+        <a class="card" href="https://regex.toolzy.site" target="_blank" rel="noopener">
+          <div class="card-bg">
+            <img v-if="screenshots.regexTester" :src="screenshots.regexTester" alt="Regex Tester preview" loading="lazy" />
+          </div>
+          <div class="card-icon">
+            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="16 18 22 12 16 6"/>
+              <polyline points="8 6 2 12 8 18"/>
+              <line x1="12" y1="4" x2="10" y2="20"/>
+            </svg>
+          </div>
+          <div class="card-body">
+            <h2 class="card-title">Regex Tester</h2>
+            <p class="card-desc">Test · Match · Replace</p>
+            <p class="card-detail">정규식을 실시간으로 테스트하고 매칭을 하이라이트로 시각화합니다. 캡처 그룹, 플래그 토글, Replace All, 자주 쓰는 패턴 모음 제공.</p>
+            <span class="card-url">regex.toolzy.site</span>
+          </div>
+          <div class="card-arrow">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="5" y1="12" x2="19" y2="12"/>
+              <polyline points="12 5 19 12 12 19"/>
+            </svg>
+          </div>
+        </a>
       </div>
     </section>
 
@@ -119,6 +144,8 @@
       <a href="https://3d-viewer.toolzy.site" target="_blank" rel="noopener">3D Viewer</a>
       <span class="sep">·</span>
       <a href="https://base64.toolzy.site" target="_blank" rel="noopener">Base64 Encoder</a>
+      <span class="sep">·</span>
+      <a href="https://regex.toolzy.site" target="_blank" rel="noopener">Regex Tester</a>
     </footer>
   </div>
 </template>
@@ -135,6 +162,7 @@ const screenshots = {
   jsonFormatter: '/screenshots/json-formatter.jpg',
   viewer3d: '/screenshots/3d-viewer.jpg',
   base64Encoder: '/screenshots/base64-encoder.jpg',
+  regexTester: null, // 스크린샷 준비 후 '/screenshots/regex-tester.jpg' 로 교체
 }
 
 onMounted(() => {
