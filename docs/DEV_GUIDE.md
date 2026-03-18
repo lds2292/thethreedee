@@ -23,8 +23,9 @@
 ```
 toolzy/
 ├── CLAUDE.md               ← 빠른 참조
-├── DEV_GUIDE.md            ← 이 문서
-├── STYLE_GUIDE.md          ← 디자인 시스템
+├── docs/
+│   ├── DEV_GUIDE.md        ← 이 문서
+│   └── STYLE_GUIDE.md      ← 디자인 시스템
 ├── package.json            ← npm workspaces 루트
 ├── netlify.toml            ← 통합 배포 설정
 ├── scripts/

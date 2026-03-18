@@ -61,8 +61,8 @@ npm run preview
 
 ## 참고 문서
 
-- **개발 가이드** (새 앱 추가, 공통 패턴): [`./DEV_GUIDE.md`](./DEV_GUIDE.md)
-- **디자인 시스템** (색상, 타이포, 컴포넌트 CSS): [`./STYLE_GUIDE.md`](./STYLE_GUIDE.md)
+- **개발 가이드** (새 앱 추가, 공통 패턴): [`./docs/DEV_GUIDE.md`](./docs/DEV_GUIDE.md)
+- **디자인 시스템** (색상, 타이포, 컴포넌트 CSS): [`./docs/STYLE_GUIDE.md`](./docs/STYLE_GUIDE.md)
 
 ---
 
