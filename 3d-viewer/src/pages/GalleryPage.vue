@@ -254,7 +254,7 @@ const filteredModels = computed(() => {
   height: 42px;
 }
 
-.search-input::placeholder { color: #4b5563; }
+.search-input::placeholder { color: #FAFAF8; }
 
 .btn-upload {
   display: flex;

@@ -1,5 +1,5 @@
 [build]
-  command = "npm run install:all && npm run build:all"
+  command = "npm run build:all"
   publish = "dist"
 
 [build.environment]
@@ -18,7 +18,12 @@
 
 [[redirects]]
   from = "/base64"
-  to   = "/base64/"
+  to   = "/encode/"
+  status = 301
+
+[[redirects]]
+  from = "/encode"
+  to   = "/encode/"
   status = 301
 
 [[redirects]]
@@ -38,8 +43,8 @@
   status = 200
 
 [[redirects]]
-  from = "/base64/*"
-  to   = "/base64/index.html"
+  from = "/encode/*"
+  to   = "/encode/index.html"
   status = 200
 
 [[redirects]]

@@ -939,7 +939,7 @@ Numbers: 42, -3.14, 1000, 0.5`
   min-width: 0;
 }
 .pattern-input::placeholder {
-  color: #3a3a4f;
+  color: #FAFAF8;
 }
 
 .flags-display {
@@ -1333,7 +1333,7 @@ Numbers: 42, -3.14, 1000, 0.5`
   position: absolute;
 }
 .test-textarea::placeholder {
-  color: #3a3a4f;
+  color: #FAFAF8;
 }
 
 /* ── Results panel body ─────────────────────────────────────────────────────── */
@@ -1497,7 +1497,7 @@ Numbers: 42, -3.14, 1000, 0.5`
   min-width: 0;
 }
 .replace-input::placeholder {
-  color: #3a3a4f;
+  color: #FAFAF8;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   font-size: 12px;
 }

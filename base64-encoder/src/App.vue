@@ -743,7 +743,7 @@ onMounted(() => {
   min-height: 0;
 }
 
-.editor::placeholder { color: #3a3a4f; }
+.editor::placeholder { color: #FAFAF8; }
 .editor[readonly] { color: #c4b5fd; }
 
 /* Status bar */

@@ -74,7 +74,7 @@
           </div>
         </a>
 
-        <a class="card" href="/base64/">
+        <a class="card" href="/encode/">
           <div class="card-bg">
             <img :src="screenshots.base64Encoder" alt="Base64 Encoder preview" loading="lazy" />
           </div>
@@ -88,7 +88,7 @@
             <h2 class="card-title">Base64 Encoder</h2>
             <p class="card-desc">Base64 · URL · Image → Base64</p>
             <p class="card-detail">텍스트·URL·이미지를 Base64로 인코딩하거나 디코딩합니다. Standard, Base64url, MIME 등 다양한 Variant와 한글을 포함한 UTF-8 완전 지원.</p>
-            <span class="card-url">toolzy.site/base64/</span>
+            <span class="card-url">toolzy.site/encode/</span>
           </div>
           <div class="card-arrow">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -143,7 +143,7 @@
       <span class="sep">·</span>
       <a href="/3d-viewer/">3D Viewer</a>
       <span class="sep">·</span>
-      <a href="/base64/">Base64 Encoder</a>
+      <a href="/encode/">Base64 Encoder</a>
       <span class="sep">·</span>
       <a href="/regex/">Regex Tester</a>
     </footer>

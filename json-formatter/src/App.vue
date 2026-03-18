@@ -1023,7 +1023,7 @@ function loadSample() {
 }
 
 .editor-textarea::placeholder {
-  color: #555570;
+  color: #FAFAF8;
 }
 
 /* ── Output ──────────────────────────────────────────────────── */
@@ -1287,7 +1287,7 @@ function loadSample() {
   transition: border-color 0.15s;
 }
 .search-input:focus { border-color: rgba(167, 139, 250, 0.5); }
-.search-input::placeholder { color: #4b4b6a; }
+.search-input::placeholder { color: #FAFAF8; }
 
 .search-count {
   font-size: 11px;
