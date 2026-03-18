@@ -259,7 +259,7 @@
                 </template>
               </button>
             </div>
-            <pre class="snippet-code"><code>{{ snippetCode }}</code></pre>
+            <pre class="snippet-code"><code v-html="highlightedCode"></code></pre>
           </div>
         </div>
       </div>
@@ -316,6 +316,30 @@
 <script setup>
 import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue'
 import MobileBlock from './components/MobileBlock.vue'
+import hljs from 'highlight.js/lib/core'
+import javascript from 'highlight.js/lib/languages/javascript'
+import typescript from 'highlight.js/lib/languages/typescript'
+import kotlin from 'highlight.js/lib/languages/kotlin'
+import java from 'highlight.js/lib/languages/java'
+import csharp from 'highlight.js/lib/languages/csharp'
+import python from 'highlight.js/lib/languages/python'
+import go from 'highlight.js/lib/languages/go'
+import rust from 'highlight.js/lib/languages/rust'
+import swift from 'highlight.js/lib/languages/swift'
+import php from 'highlight.js/lib/languages/php'
+import ruby from 'highlight.js/lib/languages/ruby'
+
+hljs.registerLanguage('javascript', javascript)
+hljs.registerLanguage('typescript', typescript)
+hljs.registerLanguage('kotlin', kotlin)
+hljs.registerLanguage('java', java)
+hljs.registerLanguage('csharp', csharp)
+hljs.registerLanguage('python', python)
+hljs.registerLanguage('go', go)
+hljs.registerLanguage('rust', rust)
+hljs.registerLanguage('swift', swift)
+hljs.registerLanguage('php', php)
+hljs.registerLanguage('ruby', ruby)
 
 // ── Mobile detection ──────────────────────────────────────────────────────────
 const isMobile = ref(false)
@@ -633,6 +657,18 @@ result = str.gsub(regex, '${rep}')`
   }
 
   return ''
+})
+
+const hlLangMap = {
+  js: 'javascript', ts: 'typescript', kotlin: 'kotlin', java: 'java',
+  csharp: 'csharp', python: 'python', go: 'go', rust: 'rust',
+  swift: 'swift', php: 'php', ruby: 'ruby',
+}
+const highlightedCode = computed(() => {
+  const code = snippetCode.value
+  const lang = hlLangMap[snippetLang.value]
+  if (!code || !lang) return code
+  return hljs.highlight(code, { language: lang }).value
 })
 
 // Refs
@@ -1115,6 +1151,26 @@ Numbers: 42, -3.14, 1000, 0.5`
   white-space: pre;
   tab-size: 4;
 }
+
+/* highlight.js token colors — dark purple theme */
+.snippet-code .hljs-keyword,
+.snippet-code .hljs-built_in      { color: #c084fc; } /* 보라: keywords */
+.snippet-code .hljs-type          { color: #67e8f9; } /* 하늘: types */
+.snippet-code .hljs-string,
+.snippet-code .hljs-template-tag  { color: #86efac; } /* 연두: strings */
+.snippet-code .hljs-number,
+.snippet-code .hljs-literal       { color: #fca5a5; } /* 연빨: numbers/literals */
+.snippet-code .hljs-comment       { color: #6b7280; font-style: italic; } /* 회색: comments */
+.snippet-code .hljs-variable,
+.snippet-code .hljs-params        { color: #d1d5db; } /* 기본: variables */
+.snippet-code .hljs-title,
+.snippet-code .hljs-title.function_ { color: #93c5fd; } /* 연파랑: functions */
+.snippet-code .hljs-attr,
+.snippet-code .hljs-attribute     { color: #fde68a; } /* 노랑: attributes */
+.snippet-code .hljs-regexp        { color: #f9a8d4; } /* 핑크: regex */
+.snippet-code .hljs-punctuation,
+.snippet-code .hljs-operator      { color: #94a3b8; } /* 회청: operators */
+.snippet-code .hljs-meta          { color: #94a3b8; }
 
 /* Quick Patterns */
 .quick-patterns-wrap {
