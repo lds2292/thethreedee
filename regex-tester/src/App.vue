@@ -1153,24 +1153,24 @@ Numbers: 42, -3.14, 1000, 0.5`
 }
 
 /* highlight.js token colors — dark purple theme */
-.snippet-code .hljs-keyword,
-.snippet-code .hljs-built_in      { color: #c084fc; } /* 보라: keywords */
-.snippet-code .hljs-type          { color: #67e8f9; } /* 하늘: types */
-.snippet-code .hljs-string,
-.snippet-code .hljs-template-tag  { color: #86efac; } /* 연두: strings */
-.snippet-code .hljs-number,
-.snippet-code .hljs-literal       { color: #fca5a5; } /* 연빨: numbers/literals */
-.snippet-code .hljs-comment       { color: #6b7280; font-style: italic; } /* 회색: comments */
-.snippet-code .hljs-variable,
-.snippet-code .hljs-params        { color: #d1d5db; } /* 기본: variables */
-.snippet-code .hljs-title,
-.snippet-code .hljs-title.function_ { color: #93c5fd; } /* 연파랑: functions */
-.snippet-code .hljs-attr,
-.snippet-code .hljs-attribute     { color: #fde68a; } /* 노랑: attributes */
-.snippet-code .hljs-regexp        { color: #f9a8d4; } /* 핑크: regex */
-.snippet-code .hljs-punctuation,
-.snippet-code .hljs-operator      { color: #94a3b8; } /* 회청: operators */
-.snippet-code .hljs-meta          { color: #94a3b8; }
+.snippet-code :deep(.hljs-keyword),
+.snippet-code :deep(.hljs-built_in)      { color: #c084fc; } /* 보라: keywords */
+.snippet-code :deep(.hljs-type)          { color: #67e8f9; } /* 하늘: types */
+.snippet-code :deep(.hljs-string),
+.snippet-code :deep(.hljs-template-tag)  { color: #86efac; } /* 연두: strings */
+.snippet-code :deep(.hljs-number),
+.snippet-code :deep(.hljs-literal)       { color: #fca5a5; } /* 연빨: numbers/literals */
+.snippet-code :deep(.hljs-comment)       { color: #6b7280; font-style: italic; } /* 회색: comments */
+.snippet-code :deep(.hljs-variable),
+.snippet-code :deep(.hljs-params)        { color: #d1d5db; } /* 기본: variables */
+.snippet-code :deep(.hljs-title),
+.snippet-code :deep(.hljs-title.function_) { color: #93c5fd; } /* 연파랑: functions */
+.snippet-code :deep(.hljs-attr),
+.snippet-code :deep(.hljs-attribute)     { color: #fde68a; } /* 노랑: attributes */
+.snippet-code :deep(.hljs-regexp)        { color: #f9a8d4; } /* 핑크: regex */
+.snippet-code :deep(.hljs-punctuation),
+.snippet-code :deep(.hljs-operator)      { color: #94a3b8; } /* 회청: operators */
+.snippet-code :deep(.hljs-meta)          { color: #94a3b8; }
 
 /* Quick Patterns */
 .quick-patterns-wrap {
