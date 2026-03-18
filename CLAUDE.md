@@ -10,6 +10,7 @@ Netlify에서 각 앱마다 별도 사이트로 배포됩니다.
 | `3d-viewer/` | 3d-viewer.toolzy.site | STL·OBJ·GLTF·GLB 브라우저 3D 뷰어 |
 | `json-formatter/` | json.toolzy.site | JSON Formatter / Validator |
 | `base64-encoder/` | base64.toolzy.site | Base64·URL 인코딩/디코딩, Image→Base64 |
+| `regex-tester/` | regex.toolzy.site | 정규식 실시간 테스트·하이라이트·치환 |
 | `landing/` | toolzy.site | Toolzy 메인 랜딩 페이지 |
 
 ## 각 앱 실행
@@ -21,6 +22,8 @@ npm run dev     --prefix json-formatter
 npm run build   --prefix json-formatter
 npm run dev     --prefix base64-encoder
 npm run build   --prefix base64-encoder
+npm run dev     --prefix regex-tester
+npm run build   --prefix regex-tester
 npm run dev     --prefix landing
 npm run build   --prefix landing
 ```
@@ -30,6 +33,7 @@ npm run build   --prefix landing
 - **3d-viewer**: Base directory `3d-viewer`, Build `npm run build`, Publish `3d-viewer/dist`
 - **json-formatter**: Base directory `json-formatter`, Build `npm run build`, Publish `json-formatter/dist`
 - **base64-encoder**: Base directory `base64-encoder`, Build `npm run build`, Publish `base64-encoder/dist`
+- **regex-tester**: Base directory `regex-tester`, Build `npm run build`, Publish `regex-tester/dist`
 - **landing**: Base directory `landing`, Build `npm run build`, Publish `landing/dist`
 
 ## 공통 사항

@@ -1,0 +1,24 @@
+# Regex Tester
+
+> Free online regular expression tester at https://regex.toolzy.site
+
+## What it does
+
+Regex Tester lets you write and debug regular expressions in real time, directly in your browser. No account or installation required.
+
+## Features
+
+- Real-time match highlighting with color-coded overlays
+- Flag toggles: g (global), i (case-insensitive), m (multiline), s (dotAll)
+- Quick patterns library: Email, URL, IP Address, Date, Phone (Korean), HEX Color, Number, UUID
+- Capture group display for each match in the Results panel
+- Replace All with $1/$2 backreference support and copyable result
+- Click any match to copy its value to clipboard
+
+## Target audience
+
+Software developers and anyone working with text processing who needs to quickly write, test, and iterate on regular expressions.
+
+## URL
+
+https://regex.toolzy.site

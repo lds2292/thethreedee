@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- Title -->
+    <title>Regex Tester — Free Online Regular Expression Tester</title>
+
+    <!-- Primary Meta -->
+    <meta name="description" content="Free online regex tester. Test and debug regular expressions in real time with match highlighting, capture groups, and replace. / 정규식을 실시간으로 테스트하고 디버깅하세요.">
+    <meta name="keywords" content="regex tester, regular expression tester, regex debugger, online regex, 정규식 테스트, 정규표현식">
+    <meta name="robots" content="index, follow">
+    <meta name="author" content="toolzy">
+    <meta name="google-adsense-account" content="ca-pub-1253318658034453">
+
+    <!-- Canonical & hreflang -->
+    <link rel="canonical" href="https://regex.toolzy.site/">
+    <link rel="alternate" hreflang="ko" href="https://regex.toolzy.site/">
+    <link rel="alternate" hreflang="en" href="https://regex.toolzy.site/">
+    <link rel="alternate" hreflang="x-default" href="https://regex.toolzy.site/">
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://regex.toolzy.site/">
+    <meta property="og:title" content="Regex Tester — Free Online Regular Expression Tester">
+    <meta property="og:description" content="Free online regex tester. Test and debug regular expressions in real time with match highlighting, capture groups, and replace.">
+    <meta property="og:locale" content="ko_KR">
+    <meta property="og:locale:alternate" content="en_US">
+    <meta property="og:site_name" content="toolzy">
+    <meta property="og:image" content="https://regex.toolzy.site/og-image.jpg">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="Regex Tester — Free Online Regular Expression Tester">
+    <meta name="twitter:description" content="Free online regex tester. Test and debug regular expressions in real time with match highlighting, capture groups, and replace.">
+    <meta name="twitter:image" content="https://regex.toolzy.site/og-image.jpg">
+
+    <!-- JSON-LD: WebApplication -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "Regex Tester",
+      "url": "https://regex.toolzy.site",
+      "description": "Free online regular expression tester. Test and debug regex in real time with match highlighting, capture group display, and replace functionality.",
+      "applicationCategory": "DeveloperApplication",
+      "operatingSystem": "Web Browser",
+      "inLanguage": ["ko", "en"],
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "featureList": [
+        "Real-time regex matching",
+        "Match highlight overlay",
+        "Capture group display",
+        "Flag toggles (g, i, m, s)",
+        "Quick patterns library",
+        "Replace All with result",
+        "Copy matches to clipboard"
+      ],
+      "potentialAction": {
+        "@type": "UseAction",
+        "target": "https://regex.toolzy.site"
+      },
+      "audience": {
+        "@type": "Audience",
+        "audienceType": "Software Developers"
+      }
+    }
+    </script>
+
+    <!-- JSON-LD: FAQ -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "How do I test a regular expression online?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Go to regex.toolzy.site, type your regex pattern in the pattern bar at the top, and enter your test string in the Test String panel. Matches are highlighted in real time as you type."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What are capture groups in regex?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Capture groups are portions of a regex pattern enclosed in parentheses, e.g. (\\d+). They capture the matched substring so you can reference it later. The Results panel shows each capture group value for every match."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How do I use the replace feature?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Enter your regex pattern in the pattern bar, type a replacement string in the Replace bar at the bottom, and click Replace All. You can use $1, $2, etc. to reference capture groups in the replacement."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What regex flags are supported?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Regex Tester supports four flags: g (global — find all matches), i (case-insensitive), m (multiline — ^ and $ match line boundaries), and s (dotAll — dot matches newlines). Toggle them individually with the flag buttons."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Is this regex tester free?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes, Regex Tester at regex.toolzy.site is completely free. No login or installation required. All regex processing happens locally in your browser — your data is never sent to a server."
+          }
+        }
+      ]
+    }
+    </script>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
