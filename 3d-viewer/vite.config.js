@@ -2,6 +2,7 @@ import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 
 export default defineConfig({
+  base: '/3d-viewer/',
   plugins: [vue()],
   server: {
     headers: {

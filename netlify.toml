@@ -1,0 +1,54 @@
+[build]
+  command = "npm run build:all"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "20"
+
+# Trailing slash redirects
+[[redirects]]
+  from = "/3d-viewer"
+  to   = "/3d-viewer/"
+  status = 301
+
+[[redirects]]
+  from = "/json"
+  to   = "/json/"
+  status = 301
+
+[[redirects]]
+  from = "/base64"
+  to   = "/base64/"
+  status = 301
+
+[[redirects]]
+  from = "/regex"
+  to   = "/regex/"
+  status = 301
+
+# SPA catch-all per app
+[[redirects]]
+  from = "/3d-viewer/*"
+  to   = "/3d-viewer/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/json/*"
+  to   = "/json/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/base64/*"
+  to   = "/base64/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/regex/*"
+  to   = "/regex/index.html"
+  status = 200
+
+# Landing catch-all (404 handling)
+[[redirects]]
+  from = "/*"
+  to   = "/index.html"
+  status = 200

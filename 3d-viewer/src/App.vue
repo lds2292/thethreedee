@@ -56,7 +56,7 @@ import AboutModal from './components/AboutModal.vue'
 import MobileBlock from './components/MobileBlock.vue'
 import NotFoundPage from './pages/NotFoundPage.vue'
 
-const isNotFound = window.location.pathname !== '/'
+const isNotFound = !window.location.pathname.startsWith(import.meta.env.BASE_URL)
 
 const MOBILE_BREAKPOINT = 768
 

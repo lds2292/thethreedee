@@ -25,7 +25,7 @@
     <!-- Tool Cards -->
     <section class="tools">
       <div class="cards">
-        <a class="card" href="https://json.toolzy.site" target="_blank" rel="noopener">
+        <a class="card" href="/json/">
           <div class="card-bg">
             <img :src="screenshots.jsonFormatter" alt="JSON Formatter preview" loading="lazy" />
           </div>
@@ -39,7 +39,7 @@
             <h2 class="card-title">JSON Formatter</h2>
             <p class="card-desc">Format · Validate · Minify · Convert</p>
             <p class="card-detail">JSON을 보기 좋게 포맷하고 문법 오류를 실시간으로 검증합니다. 트리 뷰, 키 정렬, CSV·TypeScript 변환까지 하나의 도구로.</p>
-            <span class="card-url">json.toolzy.site</span>
+            <span class="card-url">toolzy.site/json/</span>
           </div>
           <div class="card-arrow">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -49,7 +49,7 @@
           </div>
         </a>
 
-        <a class="card" href="https://3d-viewer.toolzy.site" target="_blank" rel="noopener">
+        <a class="card" href="/3d-viewer/">
           <div class="card-bg">
             <img :src="screenshots.viewer3d" alt="3D Viewer preview" loading="lazy" />
           </div>
@@ -64,7 +64,7 @@
             <h2 class="card-title">3D Viewer</h2>
             <p class="card-desc">STL · OBJ · GLTF · GLB</p>
             <p class="card-detail">STL, OBJ, GLTF, GLB 파일을 브라우저에서 바로 렌더링합니다. 회전·확대·조명 조절과 와이어프레임 모드, 스크린샷 저장 지원.</p>
-            <span class="card-url">3d-viewer.toolzy.site</span>
+            <span class="card-url">toolzy.site/3d-viewer/</span>
           </div>
           <div class="card-arrow">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -74,7 +74,7 @@
           </div>
         </a>
 
-        <a class="card" href="https://base64.toolzy.site" target="_blank" rel="noopener">
+        <a class="card" href="/base64/">
           <div class="card-bg">
             <img :src="screenshots.base64Encoder" alt="Base64 Encoder preview" loading="lazy" />
           </div>
@@ -88,7 +88,7 @@
             <h2 class="card-title">Base64 Encoder</h2>
             <p class="card-desc">Base64 · URL · Image → Base64</p>
             <p class="card-detail">텍스트·URL·이미지를 Base64로 인코딩하거나 디코딩합니다. Standard, Base64url, MIME 등 다양한 Variant와 한글을 포함한 UTF-8 완전 지원.</p>
-            <span class="card-url">base64.toolzy.site</span>
+            <span class="card-url">toolzy.site/base64/</span>
           </div>
           <div class="card-arrow">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -98,7 +98,7 @@
           </div>
         </a>
 
-        <a class="card" href="https://regex.toolzy.site" target="_blank" rel="noopener">
+        <a class="card" href="/regex/">
           <div class="card-bg">
             <img v-if="screenshots.regexTester" :src="screenshots.regexTester" alt="Regex Tester preview" loading="lazy" />
           </div>
@@ -113,7 +113,7 @@
             <h2 class="card-title">Regex Tester</h2>
             <p class="card-desc">Test · Match · Replace</p>
             <p class="card-detail">정규식을 실시간으로 테스트하고 매칭을 하이라이트로 시각화합니다. 캡처 그룹, 플래그 토글, Replace All, 자주 쓰는 패턴 모음 제공.</p>
-            <span class="card-url">regex.toolzy.site</span>
+            <span class="card-url">toolzy.site/regex/</span>
           </div>
           <div class="card-arrow">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -139,13 +139,13 @@
     <footer class="footer">
       <span>© 2025 Toolzy</span>
       <span class="sep">·</span>
-      <a href="https://json.toolzy.site" target="_blank" rel="noopener">JSON Formatter</a>
+      <a href="/json/">JSON Formatter</a>
       <span class="sep">·</span>
-      <a href="https://3d-viewer.toolzy.site" target="_blank" rel="noopener">3D Viewer</a>
+      <a href="/3d-viewer/">3D Viewer</a>
       <span class="sep">·</span>
-      <a href="https://base64.toolzy.site" target="_blank" rel="noopener">Base64 Encoder</a>
+      <a href="/base64/">Base64 Encoder</a>
       <span class="sep">·</span>
-      <a href="https://regex.toolzy.site" target="_blank" rel="noopener">Regex Tester</a>
+      <a href="/regex/">Regex Tester</a>
     </footer>
   </div>
 </template>

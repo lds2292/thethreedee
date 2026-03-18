@@ -361,7 +361,7 @@ import HelpModal from './components/HelpModal.vue'
 import MobileBlock from './components/MobileBlock.vue'
 import NotFoundPage from './pages/NotFoundPage.vue'
 
-const isNotFound = window.location.pathname !== '/'
+const isNotFound = !window.location.pathname.startsWith(import.meta.env.BASE_URL)
 
 const MOBILE_BREAKPOINT = 768
 const isMobile = ref(window.innerWidth < MOBILE_BREAKPOINT)

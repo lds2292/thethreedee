@@ -475,8 +475,7 @@ function onKeydown(e) {
 }
 
 onMounted(() => {
-  const path = window.location.pathname.replace(/\/+$/, '') || '/'
-  isNotFound.value = path !== '/'
+  isNotFound.value = !window.location.pathname.startsWith(import.meta.env.BASE_URL)
 
   isMobile.value = window.innerWidth < 768
 
