@@ -29,7 +29,7 @@
             ref="patternInputRef"
             v-model="pattern"
             class="pattern-input"
-            placeholder="pattern"
+            placeholder="정규식 패턴"
             spellcheck="false"
             autocomplete="off"
             @keydown.escape="pattern = ''"
@@ -112,7 +112,7 @@
               ref="textareaRef"
               v-model="testString"
               class="test-textarea"
-              placeholder="Enter test string here…"
+              placeholder="테스트할 문자열을 입력하세요..."
               spellcheck="false"
               @scroll="syncScroll"
             ></textarea>
@@ -194,7 +194,7 @@
           <input
             v-model="replaceWith"
             class="replace-input"
-            placeholder="Replace with… (use $1, $2 for capture groups)"
+            placeholder="치환 문자열... (캡처 그룹은 $1, $2 사용)"
             spellcheck="false"
           />
         </div>

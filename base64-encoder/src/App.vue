@@ -631,7 +631,7 @@ onMounted(() => {
 
 .variant-desc {
   font-size: 11px;
-  color: #3a3a4f;
+  color: #6b7280;
   font-family: monospace;
   margin-left: 4px;
 }
