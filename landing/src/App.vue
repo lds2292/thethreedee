@@ -162,7 +162,7 @@ const screenshots = {
   jsonFormatter: '/screenshots/json-formatter.jpg',
   viewer3d: '/screenshots/3d-viewer.jpg',
   base64Encoder: '/screenshots/base64-encoder.jpg',
-  regexTester: null, // 스크린샷 준비 후 '/screenshots/regex-tester.jpg' 로 교체
+  regexTester: '/screenshots/regex-tester.jpg',
 }
 
 onMounted(() => {

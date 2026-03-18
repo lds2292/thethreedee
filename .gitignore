@@ -4,3 +4,6 @@ dist/
 .idea/
 .claude/
 *.local
+
+# Local Netlify folder
+.netlify
