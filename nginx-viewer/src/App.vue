@@ -76,7 +76,10 @@
             class="tab"
             :class="{ active: activeTab === tab.key }"
             @click="activeTab = tab.key"
-          >{{ tab.label }}</button>
+          >
+            {{ tab.label }}
+            <span v-if="tab.badge" class="tab-badge" :class="`tab-badge-${tab.badgeColor}`">{{ tab.badge }}</span>
+          </button>
           <div class="tabs-spacer"></div>
           <button v-if="activeTab === 'formatted'" class="btn-ghost copy-btn" @click="copyFormatted">
             {{ copied ? '✓ 복사됨' : '복사' }}
@@ -106,6 +109,16 @@
         <div v-if="parsed && !error && activeTab === 'summary'" class="output-area summary-area">
           <SummaryView :summary="summaryData" />
         </div>
+
+        <!-- Lint Tab -->
+        <div v-if="parsed && !error && activeTab === 'lint'" class="output-area summary-area">
+          <LintView :issues="lintIssues" />
+        </div>
+
+        <!-- Locations Tab -->
+        <div v-if="parsed && !error && activeTab === 'locations'" class="output-area summary-area">
+          <LocationAnalyzer :ast="ast" />
+        </div>
       </div>
     </div>
   </div>
@@ -115,8 +128,11 @@
 import { ref, computed, onMounted } from 'vue'
 import MobileBlock from './components/MobileBlock.vue'
 import { parse, format, summarize } from './utils/nginxParser.js'
+import { lint } from './utils/nginxLint.js'
 import TreeNode from './components/TreeNode.vue'
 import SummaryView from './components/SummaryView.vue'
+import LintView from './components/LintView.vue'
+import LocationAnalyzer from './components/LocationAnalyzer.vue'
 
 const isMobile = ref(false)
 const showHelp = ref(false)
@@ -126,14 +142,20 @@ const error = ref(null)
 const ast = ref([])
 const formattedCode = ref('')
 const summaryData = ref(null)
+const lintIssues = ref([])
 const activeTab = ref('formatted')
 const copied = ref(false)
 
-const tabs = [
-  { key: 'formatted', label: 'Formatted' },
-  { key: 'tree',      label: 'Tree' },
-  { key: 'summary',   label: 'Summary' },
-]
+const lintErrorCount = computed(() => lintIssues.value.filter(i => i.severity === 'error').length)
+const lintWarnCount  = computed(() => lintIssues.value.filter(i => i.severity === 'warning').length)
+
+const tabs = computed(() => [
+  { key: 'formatted',  label: 'Formatted' },
+  { key: 'tree',       label: 'Tree' },
+  { key: 'summary',    label: 'Summary' },
+  { key: 'lint',       label: 'Lint', badge: lintErrorCount.value || lintWarnCount.value || null, badgeColor: lintErrorCount.value ? 'error' : 'warning' },
+  { key: 'locations',  label: 'Locations' },
+])
 
 const nodeCount = computed(() => {
   let n = 0
@@ -160,6 +182,7 @@ function run() {
   ast.value = result.ast
   formattedCode.value = format(result.ast)
   summaryData.value = summarize(result.ast)
+  lintIssues.value = lint(result.ast)
   parsed.value = true
 }
 
@@ -168,6 +191,7 @@ function clearInput() {
   parsed.value = false
   error.value = null
   ast.value = []
+  lintIssues.value = []
 }
 
 async function copyFormatted() {
@@ -437,6 +461,22 @@ onMounted(() => {
 .tabs-spacer { flex: 1; }
 
 .copy-btn { margin-bottom: 8px; }
+
+.tab-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 8px;
+  font-size: 10px;
+  font-weight: 700;
+  margin-left: 5px;
+}
+
+.tab-badge-error   { background: rgba(239,68,68,0.2);  color: #fca5a5; }
+.tab-badge-warning { background: rgba(234,179,8,0.2);  color: #fde68a; }
 
 /* Placeholder */
 .placeholder {
