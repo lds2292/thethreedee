@@ -141,6 +141,29 @@
             </svg>
           </div>
         </a>
+
+        <a class="card" href="/nginx/">
+          <div class="card-bg">
+            <img v-if="screenshots.nginxViewer" :src="screenshots.nginxViewer" alt="nginx Viewer preview" loading="lazy" />
+          </div>
+          <div class="card-icon">
+            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="16 18 22 12 16 6"/>
+              <polyline points="8 6 2 12 8 18"/>
+            </svg>
+          </div>
+          <div class="card-body">
+            <h2 class="card-title">nginx Viewer</h2>
+            <p class="card-desc">Parse · Format · Tree · Summary</p>
+            <p class="card-detail">nginx.conf를 붙여넣으면 자동 포매팅, 트리 탐색, 핵심 설정 요약을 제공합니다. Virtual host, upstream, location, SSL 인증서 정보를 한눈에 확인.</p>
+          </div>
+          <div class="card-arrow">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="5" y1="12" x2="19" y2="12"/>
+              <polyline points="12 5 19 12 12 19"/>
+            </svg>
+          </div>
+        </a>
       </div>
     </section>
 
@@ -167,6 +190,8 @@
       <a href="/regex/">Regex Tester</a>
       <span class="sep">·</span>
       <a href="/cron/">Cron Tester</a>
+      <span class="sep">·</span>
+      <a href="/nginx/">nginx Viewer</a>
     </footer>
   </div>
 </template>
@@ -185,6 +210,7 @@ const screenshots = {
   base64Encoder: '/screenshots/base64-encoder.jpg',
   regexTester: '/screenshots/regex-tester.jpg',
   cronTester: '/screenshots/cron-tester.jpg',
+  nginxViewer: '/screenshots/nginx-viewer.jpg',
 }
 
 onMounted(() => {

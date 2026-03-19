@@ -7,7 +7,8 @@
     "json-formatter",
     "base64-encoder",
     "regex-tester",
-    "cron-tester"
+    "cron-tester",
+    "nginx-viewer"
   ],
   "dependencies": {
     "vue": "^3.5.30"
@@ -17,7 +18,7 @@
     "vite": "^8.0.0"
   },
   "scripts": {
-    "build:all": "npm run build --workspace landing && npm run build --workspace 3d-viewer && npm run build --workspace json-formatter && npm run build --workspace base64-encoder && npm run build --workspace regex-tester && npm run build --workspace cron-tester && node scripts/merge-dist.js",
+    "build:all": "npm run build --workspace landing && npm run build --workspace 3d-viewer && npm run build --workspace json-formatter && npm run build --workspace base64-encoder && npm run build --workspace regex-tester && npm run build --workspace cron-tester && npm run build --workspace nginx-viewer && node scripts/merge-dist.js",
     "preview": "npm run build:all && npx serve dist",
     "serve": "npx serve dist"
   }

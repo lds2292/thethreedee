@@ -19,5 +19,6 @@ copyDir(path.join(root, 'json-formatter/dist'), path.join(root, 'dist/json'))
 copyDir(path.join(root, 'base64-encoder/dist'), path.join(root, 'dist/encode'))
 copyDir(path.join(root, 'regex-tester/dist'),   path.join(root, 'dist/regex'))
 copyDir(path.join(root, 'cron-tester/dist'),    path.join(root, 'dist/cron'))
+copyDir(path.join(root, 'nginx-viewer/dist'),   path.join(root, 'dist/nginx'))
 
 console.log('✓ dist merged successfully')

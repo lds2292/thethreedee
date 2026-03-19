@@ -36,6 +36,11 @@
   to   = "/cron/"
   status = 301
 
+[[redirects]]
+  from = "/nginx"
+  to   = "/nginx/"
+  status = 301
+
 # SPA catch-all per app
 [[redirects]]
   from = "/3d-viewer/*"
@@ -60,6 +65,11 @@
 [[redirects]]
   from = "/cron/*"
   to   = "/cron/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/nginx/*"
+  to   = "/nginx/index.html"
   status = 200
 
 # Landing catch-all (404 handling)
