@@ -780,12 +780,17 @@ function jsonToCsv() {
   if (error.value || !input.value) return
   try {
     const parsed = JSON.parse(input.value)
-    if (!Array.isArray(parsed) || parsed.length === 0) {
+    // 단건 객체면 배열로 자동 wrap
+    const arr = Array.isArray(parsed)
+      ? parsed
+      : (parsed !== null && typeof parsed === 'object') ? [parsed] : null
+
+    if (!arr || arr.length === 0) {
       csvError.value = true
       setTimeout(() => { csvError.value = false }, 1500)
       return
     }
-    const rows = parsed.map(item =>
+    const rows = arr.map(item =>
       item !== null && typeof item === 'object' ? flattenObject(item) : { value: item }
     )
     // 모든 row의 키 합집합 (순서 유지)
