@@ -283,7 +283,7 @@
               <div class="line-numbers output-line-numbers" ref="outputLineNumRef">
                 <span v-for="n in outputLineCount" :key="n">{{ n }}</span>
               </div>
-              <pre class="output-pre" ref="outputPreRef" @scroll="syncOutputScroll"><code v-if="outputFormat === 'csv'">{{ output }}</code><code v-else v-html="highlightedOutput" /></pre>
+              <pre class="output-pre" ref="outputPreRef" @scroll="syncOutputScroll" tabindex="0" @keydown="onOutputKeydown"><code v-if="outputFormat === 'csv'">{{ output }}</code><code v-else v-html="highlightedOutput" /></pre>
             </div>
           </template>
           <div v-else class="output-empty">
@@ -457,6 +457,18 @@ const outputLineCount = computed(() => {
 function syncOutputScroll() {
   if (outputLineNumRef.value && outputPreRef.value) {
     outputLineNumRef.value.scrollTop = outputPreRef.value.scrollTop
+  }
+}
+
+function onOutputKeydown(e) {
+  const mod = e.ctrlKey || e.metaKey
+  if (mod && e.key === 'a') {
+    e.preventDefault()
+    const selection = window.getSelection()
+    const range = document.createRange()
+    range.selectNodeContents(outputPreRef.value)
+    selection.removeAllRanges()
+    selection.addRange(range)
   }
 }
 
@@ -1058,6 +1070,10 @@ function loadSample() {
   line-height: 22px;
   white-space: pre;
   overflow: auto;
+}
+
+.output-pre:focus {
+  outline: none;
 }
 
 .output-pre code {
