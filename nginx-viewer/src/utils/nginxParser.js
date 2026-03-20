@@ -164,11 +164,11 @@ function parse(src) {
 }
 
 // ─────────────────────────────────────────
-// Formatter  (AST → string)
+// Formatter  (AST → plain string)
 // ─────────────────────────────────────────
 
-function formatNode(node, depth) {
-  const indent = '  '.repeat(depth)
+function formatNode(node, depth, indentStr) {
+  const indent = indentStr.repeat(depth)
 
   if (node.type === 'comment') {
     return `${indent}# ${node.text}`
@@ -185,7 +185,7 @@ function formatNode(node, depth) {
 
   if (node.type === 'block') {
     const header = `${indent}${node.name}${node.params.length ? ' ' + node.params.join(' ') : ''} {`
-    const body = node.children.map(c => formatNode(c, depth + 1)).join('\n')
+    const body = node.children.map(c => formatNode(c, depth + 1, indentStr)).join('\n')
     const close = `${indent}}`
     return body ? `${header}\n${body}\n${close}` : `${header}\n${close}`
   }
@@ -193,9 +193,58 @@ function formatNode(node, depth) {
   return ''
 }
 
-export function format(ast) {
-  const lines = ast.map(n => formatNode(n, 0))
-  // Collapse more than one consecutive blank line to one
+export function format(ast, indentStr = '  ') {
+  const lines = ast.map(n => formatNode(n, 0, indentStr))
+  return lines.join('\n').replace(/\n{3,}/g, '\n\n')
+}
+
+// ─────────────────────────────────────────
+// Highlighter  (AST → HTML string)
+// ─────────────────────────────────────────
+
+function esc(str) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+}
+
+function highlightNode(node, depth, indentStr) {
+  const pad = indentStr.repeat(depth)
+
+  if (node.type === 'comment') {
+    return `${pad}<span class="hl-comment"># ${esc(node.text)}</span>`
+  }
+
+  if (node.type === 'include') {
+    return `${pad}<span class="hl-include-kw">include</span> <span class="hl-include-path">${esc(node.pattern)}</span><span class="hl-punct">;</span>`
+  }
+
+  if (node.type === 'directive') {
+    const semi = node.missingSemi ? '' : '<span class="hl-punct">;</span>'
+    const vals = node.values.length
+      ? ' ' + node.values.map(v => `<span class="hl-value">${esc(v)}</span>`).join(' ')
+      : ''
+    const warn = node.missingSemi ? ' <span class="hl-warn">⚠</span>' : ''
+    return `${pad}<span class="hl-key">${esc(node.name)}</span>${vals}${semi}${warn}`
+  }
+
+  if (node.type === 'block') {
+    const params = node.params.length
+      ? ' ' + node.params.map(p => `<span class="hl-param">${esc(p)}</span>`).join(' ')
+      : ''
+    const header = `${pad}<span class="hl-block">${esc(node.name)}</span>${params} <span class="hl-punct">{</span>`
+    const body = node.children.map(c => highlightNode(c, depth + 1, indentStr)).join('\n')
+    const close = `${pad}<span class="hl-punct">}</span>`
+    return body ? `${header}\n${body}\n${close}` : `${header}\n${close}`
+  }
+
+  return ''
+}
+
+export function highlight(ast, indentStr = '  ') {
+  const lines = ast.map(n => highlightNode(n, 0, indentStr))
   return lines.join('\n').replace(/\n{3,}/g, '\n\n')
 }
 

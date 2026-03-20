@@ -81,9 +81,20 @@
             <span v-if="tab.badge" class="tab-badge" :class="`tab-badge-${tab.badgeColor}`">{{ tab.badge }}</span>
           </button>
           <div class="tabs-spacer"></div>
-          <button v-if="activeTab === 'formatted'" class="btn-ghost copy-btn" @click="copyFormatted">
-            {{ copied ? '✓ 복사됨' : '복사' }}
-          </button>
+          <template v-if="activeTab === 'formatted'">
+            <div class="indent-selector">
+              <button
+                v-for="opt in indentOptions"
+                :key="opt.value"
+                class="indent-btn"
+                :class="{ active: indentStr === opt.value }"
+                @click="indentStr = opt.value"
+              >{{ opt.label }}</button>
+            </div>
+            <button class="btn-ghost copy-btn" @click="copyFormatted">
+              {{ copied ? '✓ 복사됨' : '복사' }}
+            </button>
+          </template>
         </div>
 
         <!-- Placeholder -->
@@ -97,7 +108,7 @@
 
         <!-- Formatted Tab -->
         <div v-if="parsed && !error && activeTab === 'formatted'" class="output-area formatted-area">
-          <pre class="formatted-code">{{ formattedCode }}</pre>
+          <pre class="formatted-code" v-html="highlightedCode"></pre>
         </div>
 
         <!-- Tree Tab -->
@@ -127,7 +138,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import MobileBlock from './components/MobileBlock.vue'
-import { parse, format, summarize } from './utils/nginxParser.js'
+import { parse, format, highlight, summarize } from './utils/nginxParser.js'
 import { lint } from './utils/nginxLint.js'
 import TreeNode from './components/TreeNode.vue'
 import SummaryView from './components/SummaryView.vue'
@@ -140,11 +151,20 @@ const input = ref('')
 const parsed = ref(false)
 const error = ref(null)
 const ast = ref([])
-const formattedCode = ref('')
 const summaryData = ref(null)
 const lintIssues = ref([])
 const activeTab = ref('formatted')
 const copied = ref(false)
+
+const indentOptions = [
+  { label: '2 spaces', value: '  ' },
+  { label: '4 spaces', value: '    ' },
+  { label: 'Tab',      value: '\t' },
+]
+const indentStr = ref('  ')
+
+const formattedCode   = computed(() => ast.value.length ? format(ast.value, indentStr.value) : '')
+const highlightedCode = computed(() => ast.value.length ? highlight(ast.value, indentStr.value) : '')
 
 const lintErrorCount = computed(() => lintIssues.value.filter(i => i.severity === 'error').length)
 const lintWarnCount  = computed(() => lintIssues.value.filter(i => i.severity === 'warning').length)
@@ -180,7 +200,6 @@ function run() {
   }
 
   ast.value = result.ast
-  formattedCode.value = format(result.ast)
   summaryData.value = summarize(result.ast)
   lintIssues.value = lint(result.ast)
   parsed.value = true
@@ -520,4 +539,44 @@ onMounted(() => {
 .summary-area {
   padding: 14px;
 }
+
+/* Indent selector */
+.indent-selector {
+  display: flex;
+  align-items: center;
+  border: 1px solid #2a2a3a;
+  border-radius: 6px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.indent-btn {
+  background: none;
+  border: none;
+  border-right: 1px solid #2a2a3a;
+  color: #6b7280;
+  font-size: 11px;
+  font-weight: 500;
+  padding: 4px 9px;
+  cursor: pointer;
+  transition: background 0.1s, color 0.1s;
+  white-space: nowrap;
+}
+
+.indent-btn:last-child { border-right: none; }
+.indent-btn:hover { color: #d1d5db; background: #1c1c26; }
+.indent-btn.active { background: #2a2a3a; color: #a78bfa; font-weight: 600; }
+</style>
+
+<style>
+/* Syntax highlight classes — unscoped because injected via v-html */
+.formatted-code .hl-block       { color: #a78bfa; font-weight: 700; }
+.formatted-code .hl-key         { color: #60a5fa; }
+.formatted-code .hl-value       { color: #d1d5db; }
+.formatted-code .hl-param       { color: #c4b5fd; }
+.formatted-code .hl-punct       { color: #4b5563; }
+.formatted-code .hl-comment     { color: #6b7280; font-style: italic; }
+.formatted-code .hl-include-kw  { color: #f59e0b; font-weight: 700; }
+.formatted-code .hl-include-path{ color: #fcd34d; }
+.formatted-code .hl-warn        { color: #f59e0b; font-size: 11px; }
 </style>
