@@ -1,5 +1,45 @@
 <template>
   <div class="loc-view">
+
+    <!-- Global URL Test -->
+    <div class="global-test-panel">
+      <div class="global-test-header">전역 URL 테스트</div>
+      <div class="global-input-wrap">
+        <div class="match-input-row">
+          <input
+            v-model="globalUrl"
+            class="match-input"
+            placeholder="https://example.com/api/users"
+            spellcheck="false"
+            @keydown.enter="doGlobalTest"
+            @input="globalResult = null"
+          />
+          <button class="btn-test" @click="doGlobalTest">테스트</button>
+          <button v-if="globalResult" class="btn-clear" @click="globalResult = null; globalUrl = ''">✕</button>
+        </div>
+      </div>
+      <div v-if="globalResult" class="global-results">
+        <div v-if="globalResult.results.length === 0" class="global-miss">
+          매칭되는 서버 블록이 없습니다.
+        </div>
+        <div v-for="(r, i) in globalResult.results" :key="i" class="global-hit">
+          <div class="global-hit-server">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            server: <span class="hl-server-name">{{ r.srv.serverNames.join(', ') || '(unnamed)' }}</span>
+            <span class="hl-listen">(listen {{ r.srv.listens.join(', ') || '-' }})</span>
+          </div>
+          <div class="global-hit-detail">server_name: {{ r.snResult.reason }}</div>
+          <div class="global-hit-detail">
+            <template v-if="r.locResult">
+              location <span class="hl-loc-path">{{ r.srv.locations[r.locResult.index]?.path }}</span>
+              — {{ r.locResult.reason }}
+            </template>
+            <template v-else>location 매칭 없음</template>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div v-if="servers.length === 0" class="empty">
       <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#3a3a4f" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
       <p>서버 블록 또는 location이 없습니다.</p>
@@ -54,7 +94,10 @@
             :class="{
               'loc-matched': matchResults[si] && matchResults[si].index === li,
               'loc-duplicate': loc.duplicate,
+              'has-line': loc.node?.line,
+              'loc-expanded': expandedLocs[`${si}-${li}`],
             }"
+            @click="jumpToLine && loc.node?.line && jumpToLine(loc.node.line)"
           >
             <div class="loc-main">
               <!-- Modifier badge -->
@@ -69,15 +112,53 @@
               <!-- Match indicator -->
               <span v-if="matchResults[si] && matchResults[si].index === li" class="matched-tag">매칭됨</span>
               <span v-if="loc.duplicate" class="dup-tag">중복 패턴</span>
+
+              <!-- Expand button -->
+              <button
+                v-if="getLocDetails(loc.node).length"
+                class="loc-expand-btn"
+                :class="{ active: expandedLocs[`${si}-${li}`] }"
+                @click.stop="toggleLoc(si, li)"
+                :title="expandedLocs[`${si}-${li}`] ? '접기' : '상세 보기'"
+              >{{ expandedLocs[`${si}-${li}`] ? '▾' : '▸' }}</button>
             </div>
             <div class="loc-meta">
               <span class="eval-note">{{ loc.evalNote }}</span>
               <span class="modifier-label" :style="{ color: modInfo(loc.modifier).color }">{{ modInfo(loc.modifier).label }}</span>
             </div>
+
+            <!-- Inline detail expansion -->
+            <div v-if="expandedLocs[`${si}-${li}`]" class="loc-detail" @click.stop>
+              <div v-for="(item, di) in getLocDetails(loc.node)" :key="di" class="loc-detail-row">
+                <span
+                  class="loc-detail-key"
+                  :class="{ 'key-has-doc': DIRECTIVE_DOCS[item.name] }"
+                  @mouseenter="showTooltip(item.name, $event)"
+                  @mouseleave="hideTooltip"
+                >{{ item.name }}</span>
+                <span class="loc-detail-val">{{ item.value }}</span>
+              </div>
+            </div>
           </div>
         </div>
       </template>
     </div>
+
+    <!-- Directive Tooltip -->
+    <Teleport to="body">
+      <div
+        v-if="tooltip"
+        class="dir-tooltip"
+        :style="{ left: tooltip.x + 'px', top: tooltip.y + 'px' }"
+        @mouseenter="cancelHide"
+        @mouseleave="hideTooltip"
+      >
+        <div class="dir-tooltip-desc">{{ tooltip.desc }}</div>
+        <div v-if="tooltip.default" class="dir-tooltip-default">기본값: <code>{{ tooltip.default }}</code></div>
+        <div v-if="!tooltip.doc" class="dir-tooltip-na">공식 문서: N/A</div>
+        <a v-else :href="tooltip.doc" target="_blank" class="dir-tooltip-link">공식 문서 ↗</a>
+      </div>
+    </Teleport>
 
     <!-- Legend -->
     <div class="legend">
@@ -90,18 +171,147 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, inject } from 'vue'
 import { analyzeLocations, matchLocation, annotateEvaluationOrder, MODIFIER_LABELS } from '../utils/locationAnalyzer.js'
+import { DIRECTIVE_DOCS } from '../utils/directiveDocs.js'
 
 const props = defineProps({
   ast: { type: Array, required: true },
 })
+
+const jumpToLine = inject('jumpToLine', null)
 
 const servers    = computed(() => analyzeLocations(props.ast))
 const annotated  = computed(() => servers.value.map(srv => annotateEvaluationOrder(srv.locations)))
 const testUrls   = ref([])
 const matchResults = ref([])
 const expandedServers = ref({})
+const expandedLocs = ref({})
+const globalUrl = ref('')
+const globalResult = ref(null)
+
+const LOC_TRACKED_DIRECTIVES = [
+  'proxy_pass', 'root', 'alias', 'try_files', 'expires',
+  'return', 'rewrite', 'index', 'fastcgi_pass', 'fastcgi_index',
+  'add_header', 'limit_req', 'limit_conn',
+  'deny', 'allow', 'auth_basic', 'auth_basic_user_file',
+  'access_log', 'error_log',
+]
+
+function getLocDetails(node) {
+  if (!node?.children) return []
+  const tracked = new Set(LOC_TRACKED_DIRECTIVES)
+  const items = []
+  for (const child of node.children) {
+    if (child.type === 'directive' && tracked.has(child.name)) {
+      items.push({ name: child.name, value: child.values.join(' ') })
+    }
+  }
+  return items
+}
+
+function toggleLoc(si, li) {
+  const key = `${si}-${li}`
+  expandedLocs.value = { ...expandedLocs.value, [key]: !expandedLocs.value[key] }
+}
+
+const tooltip = ref(null)
+let hideTimer = null
+
+function showTooltip(name, event) {
+  const info = DIRECTIVE_DOCS[name]
+  const rect = event.currentTarget.getBoundingClientRect()
+  cancelHide()
+  tooltip.value = {
+    desc: info?.desc ?? 'N/A',
+    default: info?.default ?? null,
+    doc: info?.doc ?? null,
+    x: rect.left,
+    y: rect.bottom + 6,
+  }
+}
+
+function hideTooltip() {
+  hideTimer = setTimeout(() => { tooltip.value = null }, 100)
+}
+
+function cancelHide() {
+  if (hideTimer) { clearTimeout(hideTimer); hideTimer = null }
+}
+
+function parseFullUrl(raw) {
+  try {
+    const u = new URL(raw)
+    const defaultPort = u.protocol === 'https:' ? '443' : '80'
+    return {
+      protocol: u.protocol.replace(':', ''),
+      hostname: u.hostname,
+      port: u.port || defaultPort,
+      pathname: u.pathname,
+    }
+  } catch {
+    return { pathname: raw.startsWith('/') ? raw : '/' + raw }
+  }
+}
+
+function matchServerName(serverNames, hostname) {
+  if (!hostname) return { match: true, reason: '호스트 미지정 — 첫 번째 서버 블록 사용' }
+  if (serverNames.includes(hostname)) return { match: true, reason: `완전 일치: ${hostname}` }
+  for (const name of serverNames) {
+    if (name.startsWith('*.') && hostname.endsWith(name.slice(1)))
+      return { match: true, reason: `앞 와일드카드: ${name}` }
+  }
+  for (const name of serverNames) {
+    if (name.endsWith('.*') && hostname.startsWith(name.slice(0, -2) + '.'))
+      return { match: true, reason: `뒤 와일드카드: ${name}` }
+  }
+  for (const name of serverNames) {
+    if (name.startsWith('~')) {
+      try {
+        if (new RegExp(name.slice(1)).test(hostname))
+          return { match: true, reason: `정규식: ${name}` }
+      } catch {}
+    }
+  }
+  return { match: false }
+}
+
+function matchListen(listens, protocol, port) {
+  if (!protocol) return { match: true, reason: '프로토콜 미지정' }
+  for (const listen of listens) {
+    const parts = listen.split(/\s+/)
+    const addrPart = parts[0]
+    const isSSL = parts.some(p => p === 'ssl')
+    const listenPort = addrPart.includes(':') ? addrPart.split(':').pop() : addrPart
+    if (listenPort === port) {
+      if (protocol === 'https' && port === '443' && !isSSL) continue
+      return { match: true, reason: `listen ${listen}` }
+    }
+  }
+  return { match: false }
+}
+
+function doGlobalTest() {
+  if (!globalUrl.value.trim()) return
+  const parsed = parseFullUrl(globalUrl.value.trim())
+  const results = []
+
+  for (let si = 0; si < servers.value.length; si++) {
+    const srv = servers.value[si]
+    const snResult = matchServerName(srv.serverNames, parsed.hostname)
+    if (!snResult.match) continue
+
+    const listenResult = parsed.hostname
+      ? matchListen(srv.listens, parsed.protocol, parsed.port)
+      : { match: true, reason: '포트 미지정' }
+    if (!listenResult.match) continue
+
+    const locResult = matchLocation(srv.locations, parsed.pathname || '/')
+    results.push({ si, snResult, listenResult, locResult, srv })
+  }
+
+  globalResult.value = { parsed, results }
+}
 
 // 서버 목록이 바뀔 때 expandedServers 초기화
 watch(servers, (newServers) => {
@@ -112,6 +322,8 @@ watch(servers, (newServers) => {
   expandedServers.value = next
   testUrls.value = []
   matchResults.value = []
+  expandedLocs.value = {}
+  globalResult.value = null
 }, { immediate: true })
 
 function toggleServer(si) {
@@ -327,6 +539,7 @@ function clearMatch(si) {
 }
 .location-row:last-child { border-bottom: none; }
 .location-row:hover { background: rgba(255,255,255,0.025); }
+.location-row.has-line { cursor: pointer; }
 
 .location-row.loc-matched {
   background: rgba(74,222,128,0.07);
@@ -395,6 +608,153 @@ function clearMatch(si) {
 .eval-note { color: #6b7280; }
 .modifier-label { font-weight: 500; }
 
+/* Expand button */
+.loc-expand-btn {
+  margin-left: auto;
+  background: none;
+  border: 1px solid #2a2a3a;
+  border-radius: 4px;
+  color: #6b7280;
+  font-size: 11px;
+  padding: 1px 7px;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: color 0.1s, border-color 0.1s, background 0.1s;
+  line-height: 1.6;
+}
+.loc-expand-btn:hover,
+.loc-expand-btn.active {
+  color: #a78bfa;
+  border-color: rgba(167,139,250,0.4);
+  background: rgba(167,139,250,0.08);
+}
+
+/* Inline detail */
+.loc-detail {
+  margin-top: 8px;
+  padding: 8px 10px;
+  background: #0f0f13;
+  border: 1px solid #2a2a3a;
+  border-radius: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.loc-detail-row {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.loc-detail-key {
+  color: #60a5fa;
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-size: 11px;
+  flex-shrink: 0;
+  min-width: 140px;
+}
+
+.key-has-doc {
+  cursor: help;
+  border-bottom: 1px dashed #4b5563;
+}
+.key-has-doc:hover {
+  color: #93c5fd;
+  border-bottom-color: #60a5fa;
+}
+
+.loc-detail-val {
+  color: #d1d5db;
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-size: 11px;
+  word-break: break-all;
+}
+
+/* Global test panel */
+.global-test-panel {
+  background: #16161d;
+  border: 1px solid #2a2a3a;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.global-input-wrap {
+  padding: 10px 14px;
+  border-bottom: 1px solid #2a2a3a;
+  background: #0f0f13;
+}
+
+.global-test-header {
+  padding: 8px 14px;
+  background: #1c1c26;
+  border-bottom: 1px solid #2a2a3a;
+  font-size: 11px;
+  font-weight: 700;
+  color: #a78bfa;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.global-results {
+  padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.global-miss {
+  font-size: 13px;
+  color: #fca5a5;
+  padding: 6px 10px;
+  background: rgba(239,68,68,0.08);
+  border: 1px solid rgba(239,68,68,0.2);
+  border-radius: 6px;
+}
+
+.global-hit {
+  padding: 8px 12px;
+  background: rgba(74,222,128,0.07);
+  border: 1px solid rgba(74,222,128,0.2);
+  border-radius: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+}
+
+.global-hit-server {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #4ade80;
+  font-weight: 600;
+}
+
+.hl-server-name {
+  font-family: 'JetBrains Mono', monospace;
+  color: #a78bfa;
+}
+
+.hl-listen {
+  color: #6b7280;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+}
+
+.global-hit-detail {
+  color: #9ca3af;
+  padding-left: 18px;
+  font-family: sans-serif;
+}
+
+.hl-loc-path {
+  font-family: 'JetBrains Mono', monospace;
+  color: #60a5fa;
+}
+
 /* Legend */
 .legend {
   display: flex;
@@ -425,5 +785,56 @@ function clearMatch(si) {
   font-family: monospace;
   font-size: 12px;
   font-weight: 700;
+}
+</style>
+
+<style>
+.dir-tooltip {
+  position: fixed;
+  z-index: 9999;
+  background: #1c1c26;
+  border: 1px solid #3a3a4f;
+  border-radius: 8px;
+  padding: 10px 13px;
+  max-width: 300px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+}
+
+.dir-tooltip-desc {
+  font-size: 12px;
+  color: #d1d5db;
+  line-height: 1.6;
+  margin-bottom: 6px;
+}
+
+.dir-tooltip-default {
+  font-size: 11px;
+  color: #6b7280;
+  margin-bottom: 6px;
+}
+
+.dir-tooltip-default code {
+  background: #2a2a3a;
+  border-radius: 3px;
+  padding: 1px 5px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: #c4b5fd;
+}
+
+.dir-tooltip-na {
+  font-size: 11px;
+  color: #4b5563;
+}
+
+.dir-tooltip-link {
+  display: inline-block;
+  font-size: 11px;
+  color: #a78bfa;
+  text-decoration: none;
+}
+
+.dir-tooltip-link:hover {
+  text-decoration: underline;
 }
 </style>

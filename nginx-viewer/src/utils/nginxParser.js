@@ -19,35 +19,41 @@ const T = {
 function tokenize(src) {
   const tokens = []
   let i = 0
+  let line = 1
 
   while (i < src.length) {
     const ch = src[i]
 
     // Whitespace
-    if (/\s/.test(ch)) { i++; continue }
+    if (/\s/.test(ch)) {
+      if (ch === '\n') line++
+      i++; continue
+    }
 
     // Comment
     if (ch === '#') {
       let j = i + 1
       while (j < src.length && src[j] !== '\n') j++
-      tokens.push({ type: T.COMMENT, value: src.slice(i + 1, j).trim() })
+      tokens.push({ type: T.COMMENT, value: src.slice(i + 1, j).trim(), line })
       i = j
       continue
     }
 
-    if (ch === '{') { tokens.push({ type: T.LBRACE }); i++; continue }
-    if (ch === '}') { tokens.push({ type: T.RBRACE }); i++; continue }
-    if (ch === ';') { tokens.push({ type: T.SEMI });   i++; continue }
+    if (ch === '{') { tokens.push({ type: T.LBRACE, line }); i++; continue }
+    if (ch === '}') { tokens.push({ type: T.RBRACE, line }); i++; continue }
+    if (ch === ';') { tokens.push({ type: T.SEMI, line });   i++; continue }
 
     // Quoted string
     if (ch === '"' || ch === "'") {
       const quote = ch
+      const startLine = line
       let j = i + 1
       while (j < src.length && src[j] !== quote) {
+        if (src[j] === '\n') line++
         if (src[j] === '\\') j++ // skip escaped char
         j++
       }
-      tokens.push({ type: T.WORD, value: src.slice(i, j + 1) })
+      tokens.push({ type: T.WORD, value: src.slice(i, j + 1), line: startLine })
       i = j + 1
       continue
     }
@@ -56,7 +62,7 @@ function tokenize(src) {
     let j = i
     while (j < src.length && !/[\s{};"'#]/.test(src[j])) j++
     if (j > i) {
-      tokens.push({ type: T.WORD, value: src.slice(i, j) })
+      tokens.push({ type: T.WORD, value: src.slice(i, j), line })
       i = j
       continue
     }
@@ -97,15 +103,18 @@ function parse(src) {
 
       if (tok.type === T.COMMENT) {
         consume()
-        nodes.push({ type: 'comment', text: tok.value })
+        nodes.push({ type: 'comment', text: tok.value, line: tok.line })
         continue
       }
 
       if (tok.type === T.WORD) {
         // Collect words until { or ;
         const words = []
+        let nodeLine = null
         while (peek().type === T.WORD) {
-          words.push(consume().value)
+          const t = consume()
+          if (nodeLine === null) nodeLine = t.line
+          words.push(t.value)
         }
 
         const next = peek()
@@ -123,6 +132,7 @@ function parse(src) {
             name: words[0],
             params: words.slice(1),
             children,
+            line: nodeLine,
           })
         } else if (next.type === T.SEMI) {
           consume() // eat ;
@@ -130,15 +140,15 @@ function parse(src) {
           const values = words.slice(1)
 
           if (name === 'include') {
-            nodes.push({ type: 'include', pattern: values.join(' ') })
+            nodes.push({ type: 'include', pattern: values.join(' '), line: nodeLine })
           } else {
-            nodes.push({ type: 'directive', name, values })
+            nodes.push({ type: 'directive', name, values, line: nodeLine })
           }
         } else if (next.type === T.EOF) {
           // Directive without semicolon at end of file — warn but continue
           const name = words[0]
           const values = words.slice(1)
-          nodes.push({ type: 'directive', name, values, missingSemi: true })
+          nodes.push({ type: 'directive', name, values, missingSemi: true, line: nodeLine })
         } else {
           throw new Error(`Unexpected token '${next.type}' after '${words.join(' ')}'`)
         }
@@ -311,13 +321,48 @@ export function summarize(ast) {
     }
   })
 
+  const UPSTREAM_DIRECTIVES = [
+    'keepalive', 'keepalive_requests', 'keepalive_timeout',
+    'least_conn', 'ip_hash', 'hash', 'zone',
+  ]
+
   // Upstreams
   walkBlocks(ast, 'upstream', b => {
+    const details = {}
+    for (const name of UPSTREAM_DIRECTIVES) {
+      const val = findDirective(b.children, name)
+      if (val !== null) details[name] = val
+    }
     summary.upstreams.push({
       name: b.params.join(' '),
       servers: findAllDirectives(b.children, 'server'),
+      details,
     })
   })
+
+  const DETAIL_DIRECTIVES = [
+    // 요청/응답 제어
+    'client_max_body_size', 'client_body_timeout', 'send_timeout',
+    // Keep-alive
+    'keepalive_timeout', 'keepalive_requests',
+    // 로그
+    'access_log', 'error_log',
+    // 파일 서빙
+    'root', 'index',
+    // 압축
+    'gzip', 'gzip_types',
+    // SSL
+    'ssl_certificate', 'ssl_certificate_key', 'ssl_protocols',
+    'ssl_ciphers', 'ssl_session_cache', 'ssl_session_timeout',
+    // Proxy
+    'proxy_pass', 'proxy_connect_timeout', 'proxy_read_timeout',
+    'proxy_send_timeout', 'proxy_buffering', 'proxy_buffer_size',
+    'proxy_cache', 'proxy_cache_valid',
+    // FastCGI
+    'fastcgi_pass', 'fastcgi_index',
+    // 기타
+    'limit_req', 'limit_conn', 'return', 'add_header',
+  ]
 
   // Virtual hosts (server blocks)
   walkBlocks(ast, 'server', b => {
@@ -328,18 +373,17 @@ export function summarize(ast) {
     const certs = findAllDirectives(b.children, 'ssl_certificate')
     summary.ssl.push(...certs)
 
-    // Locations inside this server
-    walkBlocks(b.children, 'location', loc => {
-      const path = loc.params.join(' ')
-      const proxyPass = findDirective(loc.children, 'proxy_pass')
-      const root = findDirective(loc.children, 'root')
-      const alias = findDirective(loc.children, 'alias')
-      summary.locations.push({ path, proxyPass, root, alias })
-    })
+    // Collect detail directives
+    const details = {}
+    for (const name of DETAIL_DIRECTIVES) {
+      const val = findDirective(b.children, name)
+      if (val !== null) details[name] = val
+    }
 
     summary.virtualHosts.push({
       listen: listens,
       serverName: serverNames,
+      details,
     })
   })
 
