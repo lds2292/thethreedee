@@ -72,13 +72,19 @@
           </div>
           <button class="btn-ghost" @click="clearInput" title="지우기">지우기</button>
         </div>
-        <textarea
-          ref="inputRef"
-          v-model="input"
-          class="input-area"
-          placeholder="여기에 nginx.conf 내용을 붙여넣으세요..."
-          spellcheck="false"
-        ></textarea>
+        <div class="input-editor-wrap">
+          <div class="line-gutter" ref="lineGutterRef">
+            <div v-for="n in lineCount" :key="n" class="ln">{{ n }}</div>
+          </div>
+          <textarea
+            ref="inputRef"
+            v-model="input"
+            class="input-area"
+            placeholder="여기에 nginx.conf 내용을 붙여넣으세요..."
+            spellcheck="false"
+            @scroll="onInputScroll"
+          ></textarea>
+        </div>
         <div class="input-footer">
           <button class="btn-primary" @click="run">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -169,6 +175,11 @@
         <div v-if="parsed && !error && activeTab === 'locations'" class="output-area summary-area">
           <LocationAnalyzer :ast="ast" />
         </div>
+
+        <!-- Diagram Tab -->
+        <div v-if="parsed && !error && activeTab === 'diagram'" class="output-area summary-area">
+          <DiagramView :ast="ast" />
+        </div>
       </div>
     </div>
   </div>
@@ -184,12 +195,21 @@ import TreeNode from './components/TreeNode.vue'
 import SummaryView from './components/SummaryView.vue'
 import LintView from './components/LintView.vue'
 import LocationAnalyzer from './components/LocationAnalyzer.vue'
+import DiagramView from './components/DiagramView.vue'
 
 const isMobile = ref(false)
 const showHelp = ref(false)
 const sampleMenuOpen = ref(false)
 const sampleWrapRef = ref(null)
 const inputRef = ref(null)
+const lineGutterRef = ref(null)
+const lineCount = computed(() => input.value ? input.value.split('\n').length : 1)
+
+function onInputScroll() {
+  if (lineGutterRef.value && inputRef.value) {
+    lineGutterRef.value.scrollTop = inputRef.value.scrollTop
+  }
+}
 const input = ref('')
 const parsed = ref(false)
 const error = ref(null)
@@ -214,15 +234,50 @@ function jumpToLine(line) {
   if (!line || !inputRef.value) return
   const textarea = inputRef.value
   const lines = input.value.split('\n')
+
+  // 선택 범위 계산
   let offset = 0
   for (let i = 0; i < line - 1 && i < lines.length; i++) {
     offset += lines[i].length + 1
   }
   const endOffset = offset + (lines[line - 1]?.length || 0)
+
+  // 미러 div로 대상 라인까지의 실제 픽셀 높이를 측정 (line-height 누적 오차 없음)
+  const style = window.getComputedStyle(textarea)
+  const mirror = document.createElement('div')
+  Object.assign(mirror.style, {
+    position: 'fixed',
+    top: '-9999px',
+    left: '-9999px',
+    width: textarea.clientWidth + 'px',
+    fontFamily: style.fontFamily,
+    fontSize: style.fontSize,
+    lineHeight: style.lineHeight,
+    paddingTop: style.paddingTop,
+    paddingBottom: style.paddingBottom,
+    paddingLeft: style.paddingLeft,
+    paddingRight: style.paddingRight,
+    boxSizing: style.boxSizing,
+    whiteSpace: 'pre-wrap',
+    wordBreak: 'break-word',
+    overflowWrap: 'break-word',
+    visibility: 'hidden',
+  })
+  // line-1 줄까지의 텍스트를 넣으면 scrollHeight = 해당 라인 시작 픽셀
+  mirror.textContent = lines.slice(0, line - 1).join('\n') + (line > 1 ? '\n' : '')
+  document.body.appendChild(mirror)
+  const lineTop = mirror.scrollHeight
+  document.body.removeChild(mirror)
+
+  const scrollTop = Math.max(0, lineTop - textarea.clientHeight / 3)
+
   textarea.focus()
   textarea.setSelectionRange(offset, endOffset)
-  const lineHeight = 22
-  textarea.scrollTop = Math.max(0, (line - 1) * lineHeight - textarea.clientHeight / 3)
+  // RAF: setSelectionRange/focus의 브라우저 자동 스크롤 이후에 덮어씀
+  requestAnimationFrame(() => {
+    textarea.scrollTop = scrollTop
+    if (lineGutterRef.value) lineGutterRef.value.scrollTop = scrollTop
+  })
 }
 
 provide('jumpToLine', jumpToLine)
@@ -236,6 +291,7 @@ const tabs = computed(() => [
   { key: 'summary',    label: 'Summary' },
   { key: 'lint',       label: 'Lint', badge: lintErrorCount.value || lintWarnCount.value || null, badgeColor: lintErrorCount.value ? 'error' : 'warning' },
   { key: 'locations',  label: 'Locations' },
+  { key: 'diagram',    label: 'Diagram' },
 ])
 
 const nodeCount = computed(() => {
@@ -428,11 +484,39 @@ onMounted(() => {
   font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
   font-size: 13px;
   line-height: 1.7;
-  padding: 14px;
+  padding: 14px 14px 14px 0;
   overflow: auto;
+  min-width: 0;
 }
 
 .input-area::placeholder { color: #3a3a4f; }
+
+.input-editor-wrap {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+  background: #0f0f13;
+}
+
+.line-gutter {
+  flex-shrink: 0;
+  width: 44px;
+  background: #0f0f13;
+  border-right: 1px solid #1e1e2e;
+  overflow: hidden;
+  padding: 14px 0;
+  user-select: none;
+}
+
+.ln {
+  display: block;
+  text-align: right;
+  padding-right: 10px;
+  font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  font-size: 13px;
+  line-height: 1.7;
+  color: #3a3a4f;
+}
 
 .input-footer {
   display: flex;

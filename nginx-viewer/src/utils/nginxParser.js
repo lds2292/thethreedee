@@ -380,10 +380,16 @@ export function summarize(ast) {
       if (val !== null) details[name] = val
     }
 
+    // Collect include patterns
+    const includes = b.children
+      .filter(c => c.type === 'include')
+      .map(c => c.pattern)
+
     summary.virtualHosts.push({
       listen: listens,
       serverName: serverNames,
       details,
+      includes,
     })
   })
 

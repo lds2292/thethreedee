@@ -22,7 +22,12 @@
         <div v-if="globalResult.results.length === 0" class="global-miss">
           매칭되는 서버 블록이 없습니다.
         </div>
-        <div v-for="(r, i) in globalResult.results" :key="i" class="global-hit">
+        <div
+          v-for="(r, i) in globalResult.results" :key="i"
+          class="global-hit"
+          :class="{ 'has-line': r.locResult && r.srv.locations[r.locResult.index]?.node?.line }"
+          @click="r.locResult && jumpToLine && jumpToLine(r.srv.locations[r.locResult.index]?.node?.line)"
+        >
           <div class="global-hit-server">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
             server: <span class="hl-server-name">{{ r.srv.serverNames.join(', ') || '(unnamed)' }}</span>
@@ -56,34 +61,6 @@
       </div>
 
       <template v-if="expandedServers[si]">
-        <!-- URL Match Tester -->
-        <div class="match-tester">
-          <div class="match-input-row">
-            <span class="match-prefix">URL</span>
-            <input
-              v-model="testUrls[si]"
-              class="match-input"
-              placeholder="/api/users 또는 https://example.com/api/users"
-              spellcheck="false"
-              @input="clearMatch(si)"
-            />
-            <button class="btn-test" @click="doMatch(si, srv.locations)">테스트</button>
-            <button v-if="matchResults[si]" class="btn-clear" @click="clearMatch(si)">✕</button>
-          </div>
-          <div v-if="matchResults[si]" class="match-result" :class="matchResults[si].found ? 'match-hit' : 'match-miss'">
-            <template v-if="matchResults[si].found">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-              <span>{{ matchResults[si].reason }}</span>
-              <span v-if="matchResults[si].extractedPath" class="extracted-path">경로 추출: {{ matchResults[si].extractedPath }}</span>
-            </template>
-            <template v-else>
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
-              매칭되는 location이 없습니다.
-              <span v-if="matchResults[si].extractedPath" class="extracted-path">경로 추출: {{ matchResults[si].extractedPath }}</span>
-            </template>
-          </div>
-        </div>
-
         <!-- Location list -->
         <div v-if="srv.locations.length === 0" class="no-locations">location 블록이 없습니다.</div>
         <div v-else class="location-list">
@@ -92,7 +69,6 @@
             :key="li"
             class="location-row"
             :class="{
-              'loc-matched': matchResults[si] && matchResults[si].index === li,
               'loc-duplicate': loc.duplicate,
               'has-line': loc.node?.line,
               'loc-expanded': expandedLocs[`${si}-${li}`],
@@ -109,8 +85,7 @@
               <!-- Path -->
               <span class="loc-path">{{ loc.path }}</span>
 
-              <!-- Match indicator -->
-              <span v-if="matchResults[si] && matchResults[si].index === li" class="matched-tag">매칭됨</span>
+              <!-- Duplicate indicator -->
               <span v-if="loc.duplicate" class="dup-tag">중복 패턴</span>
 
               <!-- Expand button -->
@@ -183,8 +158,6 @@ const jumpToLine = inject('jumpToLine', null)
 
 const servers    = computed(() => analyzeLocations(props.ast))
 const annotated  = computed(() => servers.value.map(srv => annotateEvaluationOrder(srv.locations)))
-const testUrls   = ref([])
-const matchResults = ref([])
 const expandedServers = ref({})
 const expandedLocs = ref({})
 const globalUrl = ref('')
@@ -239,9 +212,14 @@ function cancelHide() {
   if (hideTimer) { clearTimeout(hideTimer); hideTimer = null }
 }
 
+function normalizeUrl(raw) {
+  if (!/^https?:\/\//i.test(raw)) return 'https://' + raw
+  return raw
+}
+
 function parseFullUrl(raw) {
   try {
-    const u = new URL(raw)
+    const u = new URL(normalizeUrl(raw))
     const defaultPort = u.protocol === 'https:' ? '443' : '80'
     return {
       protocol: u.protocol.replace(':', ''),
@@ -293,7 +271,8 @@ function matchListen(listens, protocol, port) {
 
 function doGlobalTest() {
   if (!globalUrl.value.trim()) return
-  const parsed = parseFullUrl(globalUrl.value.trim())
+  globalUrl.value = normalizeUrl(globalUrl.value.trim())
+  const parsed = parseFullUrl(globalUrl.value)
   const results = []
 
   for (let si = 0; si < servers.value.length; si++) {
@@ -320,8 +299,6 @@ watch(servers, (newServers) => {
     next[i] = i === 0  // 첫 번째 서버만 펼치고 나머지는 접음
   })
   expandedServers.value = next
-  testUrls.value = []
-  matchResults.value = []
   expandedLocs.value = {}
   globalResult.value = null
 }, { immediate: true })
@@ -334,32 +311,6 @@ function modInfo(modifier) {
   return MODIFIER_LABELS[modifier] || { symbol: '?', label: '', color: '#6b7280' }
 }
 
-function extractPath(raw) {
-  try {
-    return new URL(raw).pathname
-  } catch {
-    return raw.startsWith('/') ? raw : '/' + raw
-  }
-}
-
-function doMatch(si, locations) {
-  const raw = testUrls.value[si] || ''
-  const uri = extractPath(raw)
-  const result = matchLocation(locations, uri)
-  matchResults.value = [...matchResults.value]
-
-  // 원본과 추출된 경로가 다를 때만 extractedPath 표시
-  const showExtracted = uri !== raw ? uri : null
-
-  matchResults.value[si] = result
-    ? { found: true, index: result.index, reason: result.reason, extractedPath: showExtracted }
-    : { found: false, extractedPath: showExtracted }
-}
-
-function clearMatch(si) {
-  matchResults.value = [...matchResults.value]
-  matchResults.value[si] = null
-}
 </script>
 
 <style scoped>
@@ -723,6 +674,15 @@ function clearMatch(si) {
   flex-direction: column;
   gap: 4px;
   font-size: 12px;
+}
+
+.global-hit.has-line {
+  cursor: pointer;
+}
+
+.global-hit.has-line:hover {
+  background: rgba(167, 139, 250, 0.05);
+  border-color: rgba(167, 139, 250, 0.2);
 }
 
 .global-hit-server {

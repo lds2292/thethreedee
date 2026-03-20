@@ -109,6 +109,16 @@
             <span class="val mono">{{ val }}</span>
           </div>
         </template>
+
+        <!-- Includes section -->
+        <template v-if="vh.includes && vh.includes.length">
+          <div class="details-divider"></div>
+          <div class="details-label">include</div>
+          <div v-for="(pattern, pi) in vh.includes" :key="pi" class="row">
+            <span class="inc-icon">📋</span>
+            <span class="val mono val-include">{{ pattern }}</span>
+          </div>
+        </template>
       </div>
     </div>
 
@@ -343,6 +353,15 @@ const isEmpty = computed(() =>
   text-transform: uppercase;
   letter-spacing: 0.06em;
   margin-bottom: 2px;
+}
+
+.inc-icon {
+  flex-shrink: 0;
+  font-size: 12px;
+}
+
+.val-include {
+  color: #7dd3fc;
 }
 
 .empty {
