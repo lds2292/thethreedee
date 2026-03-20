@@ -45,26 +45,24 @@
               </marker>
             </defs>
 
+            <!-- Pass 1: dimmed / normal connections (rendered first = below) -->
             <g
-              v-for="(conn, ci) in layout.connections" :key="ci"
+              v-for="(conn, ci) in inactiveConns" :key="`bg-${ci}`"
               class="conn-g"
               :class="connHighlight(conn)"
               @mouseenter="onConnEnter(conn, $event)"
               @mousemove="onConnMove($event)"
               @mouseleave="onConnLeave"
             >
-              <!-- Wide transparent hit area -->
               <path :d="conn.d" fill="none" stroke="transparent" stroke-width="16"/>
-              <!-- Visual line -->
               <path
                 :d="conn.d"
                 fill="none"
                 :stroke="conn.color"
-                :stroke-width="connHighlight(conn) === 'active' ? 2.5 : 1.5"
-                :stroke-opacity="connHighlight(conn) === 'dimmed' ? 0.1 : connHighlight(conn) === 'active' ? 0.9 : 0.55"
+                :stroke-width="1.5"
+                :stroke-opacity="connHighlight(conn) === 'dimmed' ? 0.1 : 0.55"
                 :marker-end="`url(#darr-${conn.colorIdx})`"
               />
-              <!-- Count badge -->
               <circle :cx="conn.mx" :cy="conn.my" r="11" fill="#16161d" :stroke="conn.color" stroke-width="1.5"
                 :stroke-opacity="connHighlight(conn) === 'dimmed' ? 0.15 : 0.7"/>
               <text
@@ -72,6 +70,34 @@
                 text-anchor="middle"
                 :fill="conn.color"
                 :fill-opacity="connHighlight(conn) === 'dimmed' ? 0.2 : 1"
+                font-size="10"
+                font-family="'JetBrains Mono', monospace"
+                font-weight="700"
+              >{{ conn.paths.length }}</text>
+            </g>
+
+            <!-- Pass 2: active connections (rendered last = always on top) -->
+            <g
+              v-for="(conn, ci) in activeConns" :key="`fg-${ci}`"
+              class="conn-g active"
+              @mouseenter="onConnEnter(conn, $event)"
+              @mousemove="onConnMove($event)"
+              @mouseleave="onConnLeave"
+            >
+              <path :d="conn.d" fill="none" stroke="transparent" stroke-width="16"/>
+              <path
+                :d="conn.d"
+                fill="none"
+                :stroke="conn.color"
+                stroke-width="2.5"
+                stroke-opacity="0.9"
+                :marker-end="`url(#darr-${conn.colorIdx})`"
+              />
+              <circle :cx="conn.mx" :cy="conn.my" r="11" fill="#16161d" :stroke="conn.color" stroke-width="1.5" stroke-opacity="0.9"/>
+              <text
+                :x="conn.mx" :y="conn.my + 4"
+                text-anchor="middle"
+                :fill="conn.color"
                 font-size="10"
                 font-family="'JetBrains Mono', monospace"
                 font-weight="700"
@@ -112,7 +138,14 @@
             @click.stop="selectNode(bk.id)"
           >
             <div class="bk-type" :style="{ color: bk.color }">
-              {{ bk.isUpstream ? 'upstream' : 'backend' }}
+              <template v-if="bk.type === 'alias'">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+                alias
+              </template>
+              <template v-else>
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                {{ bk.isUpstream ? 'upstream' : 'backend' }}
+              </template>
             </div>
             <div class="bk-host">{{ bk.host }}</div>
             <div v-if="bk.isUpstream && bk.upstreamServers.length" class="bk-members">
@@ -157,10 +190,20 @@ const HDR_H    = 34
 const SRV_GAP  = 10
 const BK_GAP   = 10
 
-const COLORS = [
-  '#7c3aed', '#2563eb', '#059669', '#d97706',
-  '#dc2626', '#0891b2', '#c026d3', '#65a30d',
+const PROXY_COLORS = [
+  '#7c3aed', '#2563eb', '#d97706',
+  '#dc2626', '#0891b2', '#c026d3',
 ]
+const ALIAS_COLORS = [
+  '#059669', '#10b981', '#34d399', '#6ee7b7',
+]
+// SVG marker용 flat 배열 (proxy + alias 순서)
+const COLORS = [...PROXY_COLORS, ...ALIAS_COLORS]
+
+function bkColor(bk, idx) {
+  if (bk.type === 'alias') return ALIAS_COLORS[idx % ALIAS_COLORS.length]
+  return PROXY_COLORS[idx % PROXY_COLORS.length]
+}
 
 function isSslPort(p) {
   return /\bssl\b/.test(p) || /\b443\b/.test(p)
@@ -192,13 +235,16 @@ const layout = computed(() => {
     sy += h + SRV_GAP
   }
 
-  // Backend positions
+  // Backend positions — proxy/alias별 색상 인덱스 분리
   const bkL = []
   let by = HDR_H + 8
-  for (let i = 0; i < backends.length; i++) {
-    const bk = backends[i]
+  let proxyIdx = 0, aliasIdx = 0
+  for (const bk of backends) {
     const h = bkHeight(bk)
-    bkL.push({ ...bk, x: BK_X, y: by, w: BK_W, h, color: COLORS[i % COLORS.length], colorIdx: i % COLORS.length })
+    const typeIdx = bk.type === 'alias' ? aliasIdx++ : proxyIdx++
+    const color = bkColor(bk, typeIdx)
+    const colorIdx = COLORS.indexOf(color) !== -1 ? COLORS.indexOf(color) : 0
+    bkL.push({ ...bk, x: BK_X, y: by, w: BK_W, h, color, colorIdx })
     by += h + BK_GAP
   }
 
@@ -283,6 +329,9 @@ function connHighlight(conn) {
   if (!hs) return 'normal'
   return (hs.srvIds.has(conn.serverId) && hs.bkIds.has(conn.backendId)) ? 'active' : 'dimmed'
 }
+
+const activeConns   = computed(() => layout.value.connections.filter(c => connHighlight(c) === 'active'))
+const inactiveConns = computed(() => layout.value.connections.filter(c => connHighlight(c) !== 'active'))
 
 function nodeClass(node) {
   const hs = highlightState.value
@@ -482,6 +531,9 @@ function onConnLeave() {
 }
 
 .bk-type {
+  display: flex;
+  align-items: center;
+  gap: 4px;
   font-size: 10px;
   font-weight: 700;
   text-transform: uppercase;

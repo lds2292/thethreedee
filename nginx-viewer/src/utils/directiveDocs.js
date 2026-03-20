@@ -62,6 +62,11 @@ export const DIRECTIVE_DOCS = {
     default: null,
     doc: 'https://nginx.org/en/docs/http/ngx_http_core_module.html#try_files',
   },
+  autoindex: {
+    desc: '디렉토리 인덱스(파일 목록)를 자동으로 생성하여 응답합니다. on으로 설정 시 index 파일이 없을 때 디렉토리 목록을 표시.',
+    default: 'off',
+    doc: 'https://nginx.org/en/docs/http/ngx_http_autoindex_module.html#autoindex',
+  },
   // ── 압축 ────────────────────────────────────────────────────
   gzip: {
     desc: '응답 gzip 압축을 활성화하거나 비활성화합니다.',
@@ -136,6 +141,16 @@ export const DIRECTIVE_DOCS = {
     default: '60s',
     doc: 'https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_send_timeout',
   },
+  proxy_set_header: {
+    desc: '업스트림 서버로 전달하는 요청 헤더를 재정의하거나 추가합니다. 빈 문자열로 설정하면 해당 헤더를 전달하지 않음.',
+    default: null,
+    doc: 'https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_set_header',
+  },
+  proxy_cookie_path: {
+    desc: '업스트림에서 내려오는 Set-Cookie 헤더의 path 속성을 재작성합니다. 쿠키 경로 변환이 필요한 프록시 구성에 사용.',
+    default: 'off',
+    doc: 'https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_cookie_path',
+  },
   proxy_buffering: {
     desc: '업스트림 서버 응답의 버퍼링 활성화 여부. off 시 응답을 즉시 클라이언트에 전달.',
     default: 'on',
@@ -155,6 +170,91 @@ export const DIRECTIVE_DOCS = {
     desc: '응답 코드별 캐시 유효 시간을 설정합니다.',
     default: null,
     doc: 'https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_cache_valid',
+  },
+  proxy_cache_bypass: {
+    desc: '지정 조건이 비어있지 않고 0이 아닐 때 캐시에서 응답하지 않고 업스트림에서 직접 받습니다.',
+    default: null,
+    doc: 'https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_cache_bypass',
+  },
+  proxy_no_cache: {
+    desc: '지정 조건이 비어있지 않고 0이 아닐 때 응답을 캐시에 저장하지 않습니다.',
+    default: null,
+    doc: 'https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_no_cache',
+  },
+  proxy_buffers: {
+    desc: '업스트림 서버 응답을 버퍼링할 버퍼 개수와 크기를 설정합니다. (예: 4 256k)',
+    default: '8 4k|8k',
+    doc: 'https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_buffers',
+  },
+  proxy_busy_buffers_size: {
+    desc: '응답을 클라이언트에 전송하는 동안 사용할 수 있는 버퍼의 최대 크기.',
+    default: '8k|16k',
+    doc: 'https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_busy_buffers_size',
+  },
+  proxy_redirect: {
+    desc: '업스트림 응답의 Location·Refresh 헤더 텍스트를 재작성합니다. off로 비활성화.',
+    default: 'default',
+    doc: 'https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_redirect',
+  },
+  proxy_hide_header: {
+    desc: '업스트림에서 전달받은 응답 헤더 중 클라이언트에게 전달하지 않을 헤더를 지정합니다.',
+    default: null,
+    doc: 'https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_hide_header',
+  },
+  proxy_pass_header: {
+    desc: '기본적으로 비활성화된 업스트림 응답 헤더를 클라이언트에 전달하도록 허용합니다.',
+    default: null,
+    doc: 'https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_pass_header',
+  },
+  proxy_http_version: {
+    desc: '업스트림과 통신할 HTTP 프로토콜 버전. keep-alive 사용 시 1.1 권장.',
+    default: '1.0',
+    doc: 'https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_http_version',
+  },
+  proxy_cookie_domain: {
+    desc: '업스트림에서 내려오는 Set-Cookie 헤더의 domain 속성을 재작성합니다.',
+    default: 'off',
+    doc: 'https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_cookie_domain',
+  },
+  proxy_intercept_errors: {
+    desc: '업스트림 응답 코드가 300 이상일 때 nginx의 error_page 지시어로 처리할지 여부.',
+    default: 'off',
+    doc: 'https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_intercept_errors',
+  },
+  proxy_next_upstream: {
+    desc: '업스트림 오류 시 다음 서버로 요청을 넘길 조건을 지정합니다. (error, timeout, http_5xx 등)',
+    default: 'error timeout',
+    doc: 'https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_next_upstream',
+  },
+  proxy_request_buffering: {
+    desc: '클라이언트 요청 본문의 버퍼링 여부. off 시 수신 즉시 업스트림에 전달.',
+    default: 'on',
+    doc: 'https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_request_buffering',
+  },
+  proxy_ignore_headers: {
+    desc: '업스트림 응답에서 처리하지 않을 헤더를 지정합니다. (X-Accel-Redirect, X-Accel-Expires, Cache-Control 등)',
+    default: null,
+    doc: 'https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_ignore_headers',
+  },
+  proxy_set_body: {
+    desc: '업스트림으로 전달하는 요청 본문을 재정의합니다.',
+    default: null,
+    doc: 'https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_set_body',
+  },
+  proxy_limit_rate: {
+    desc: '업스트림 응답을 읽는 속도를 제한합니다. 초당 바이트 수. 0은 제한 없음.',
+    default: '0',
+    doc: 'https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_limit_rate',
+  },
+  proxy_ssl_protocols: {
+    desc: 'HTTPS 업스트림 연결 시 활성화할 SSL/TLS 프로토콜 버전.',
+    default: 'TLSv1 TLSv1.1 TLSv1.2 TLSv1.3',
+    doc: 'https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_ssl_protocols',
+  },
+  proxy_ssl_verify: {
+    desc: 'HTTPS 업스트림의 서버 인증서를 검증할지 여부.',
+    default: 'off',
+    doc: 'https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_ssl_verify',
   },
   // ── FastCGI ──────────────────────────────────────────────────
   fastcgi_pass: {

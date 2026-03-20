@@ -1,11 +1,11 @@
 /**
  * nginx AST → diagram data extractor
- * 서버 블록, 백엔드(proxy_pass 대상), upstream, 연결 관계 추출
+ * 서버 블록, 백엔드(proxy_pass/alias 대상), upstream, 연결 관계 추출
  */
 
 export function extractDiagramData(ast) {
   const upstreamMap = new Map() // name → string[]
-  const backendMap  = new Map() // host → backend node
+  const backendMap  = new Map() // key → backend node  (proxy: host, alias: path)
   const servers     = []
 
   // Pass 1: upstream 블록 수집
@@ -29,16 +29,17 @@ export function extractDiagramData(ast) {
     }
   }
 
-  function getBackend(host) {
-    if (backendMap.has(host)) return backendMap.get(host)
-    const isUpstream = upstreamMap.has(host)
+  function getBackend(key, type) {
+    if (backendMap.has(key)) return backendMap.get(key)
+    const isUpstream = type === 'proxy' && upstreamMap.has(key)
     const bk = {
       id: `bk-${backendMap.size}`,
-      host,
+      host: key,
+      type,           // 'proxy' | 'alias'
       isUpstream,
-      upstreamServers: isUpstream ? upstreamMap.get(host) : [],
+      upstreamServers: isUpstream ? upstreamMap.get(key) : [],
     }
-    backendMap.set(host, bk)
+    backendMap.set(key, bk)
     return bk
   }
 
@@ -61,15 +62,24 @@ export function extractDiagramData(ast) {
       const path = child.params.join(' ')
 
       const proxyDir = child.children.find(c => c.type === 'directive' && c.name === 'proxy_pass')
+      const aliasDir = child.children.find(c => c.type === 'directive' && c.name === 'alias')
+
       if (proxyDir) {
         const host = normalizeHost(proxyDir.values.join(' '))
         if (host) {
-          const bk = getBackend(host)
+          const bk = getBackend(host, 'proxy')
+          if (!connMap.has(bk.id)) connMap.set(bk.id, { backendId: bk.id, paths: [] })
+          connMap.get(bk.id).paths.push(path)
+        }
+      } else if (aliasDir) {
+        const aliasPath = aliasDir.values.join(' ')
+        if (aliasPath) {
+          const bk = getBackend(aliasPath, 'alias')
           if (!connMap.has(bk.id)) connMap.set(bk.id, { backendId: bk.id, paths: [] })
           connMap.get(bk.id).paths.push(path)
         }
       } else {
-        if (child.children.some(c => c.type === 'directive' && (c.name === 'alias' || c.name === 'root'))) {
+        if (child.children.some(c => c.type === 'directive' && c.name === 'root')) {
           hasStatic = true
         }
       }

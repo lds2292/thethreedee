@@ -1,7 +1,7 @@
 <template>
   <div class="loc-view">
 
-    <!-- Global URL Test -->
+    <!-- Toolbar: URL Test -->
     <div class="global-test-panel">
       <div class="global-test-header">전역 URL 테스트</div>
       <div class="global-input-wrap">
@@ -45,19 +45,42 @@
       </div>
     </div>
 
+    <!-- Search bar (always visible) -->
+    <div class="search-bar">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input
+        ref="searchInputRef"
+        v-model="searchQuery"
+        class="search-input"
+        placeholder="path, proxy_pass, alias 등으로 검색..."
+        spellcheck="false"
+        @keydown.escape="clearSearch"
+      />
+      <span v-if="searchQuery" class="search-count">
+        {{ searchMatchCount }}개 매칭
+      </span>
+      <button v-if="searchQuery" class="btn-clear" @click="searchQuery = ''">✕</button>
+    </div>
+
     <div v-if="servers.length === 0" class="empty">
       <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#3a3a4f" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
       <p>서버 블록 또는 location이 없습니다.</p>
     </div>
 
-    <div v-for="(srv, si) in servers" :key="si" class="server-block">
+    <div
+      v-for="(srv, si) in servers" :key="si"
+      v-show="!searchQuery || filteredLocs[si]?.length > 0"
+      class="server-block"
+    >
       <!-- Server header (clickable to expand/collapse) -->
       <div class="server-header" @click="toggleServer(si)">
         <span class="expand-icon">{{ expandedServers[si] ? '▾' : '▸' }}</span>
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
         <span class="server-name">{{ srv.serverNames.join(', ') || '(unnamed)' }}</span>
         <span v-if="srv.listens.length" class="server-listen">{{ srv.listens.join(', ') }}</span>
-        <span class="loc-count-badge">{{ srv.locations.length }} locations</span>
+        <span class="loc-count-badge">
+          {{ searchQuery ? `${filteredLocs[si]?.length ?? 0} / ` : '' }}{{ srv.locations.length }} locations
+        </span>
       </div>
 
       <template v-if="expandedServers[si]">
@@ -67,6 +90,7 @@
           <div
             v-for="(loc, li) in annotated[si]"
             :key="li"
+            v-show="!searchQuery || isLocMatch(loc)"
             class="location-row"
             :class="{
               'loc-duplicate': loc.duplicate,
@@ -82,6 +106,14 @@
                 :style="{ color: modInfo(loc.modifier).color, borderColor: modInfo(loc.modifier).color + '55' }"
               >{{ modInfo(loc.modifier).symbol || '∅' }}</span>
 
+              <!-- Type icon -->
+              <span v-if="locHasDirective(loc.node, 'proxy_pass')" class="loc-type-icon loc-icon-proxy" title="proxy_pass — 다른 서버로 전달">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+              </span>
+              <span v-else-if="locHasDirective(loc.node, 'alias')" class="loc-type-icon loc-icon-alias" title="alias — 파일시스템 경로로 대체">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+              </span>
+
               <!-- Path -->
               <span class="loc-path">{{ loc.path }}</span>
 
@@ -94,8 +126,14 @@
                 class="loc-expand-btn"
                 :class="{ active: expandedLocs[`${si}-${li}`] }"
                 @click.stop="toggleLoc(si, li)"
-                :title="expandedLocs[`${si}-${li}`] ? '접기' : '상세 보기'"
-              >{{ expandedLocs[`${si}-${li}`] ? '▾' : '▸' }}</button>
+              >{{ expandedLocs[`${si}-${li}`] ? '닫기' : '상세' }}</button>
+
+              <!-- Delete button -->
+              <button
+                v-if="deleteNode && loc.node"
+                class="loc-delete-btn"
+                @click.stop="confirmDelete(loc.node, loc.path)"
+              >삭제</button>
             </div>
             <div class="loc-meta">
               <span class="eval-note">{{ loc.evalNote }}</span>
@@ -135,6 +173,27 @@
       </div>
     </Teleport>
 
+    <!-- Delete Confirm Modal -->
+    <Teleport to="body">
+      <div v-if="deleteTarget" class="delete-modal-overlay" @click.self="cancelDelete">
+        <div class="delete-modal">
+          <div class="delete-modal-header">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+            <span>Location 삭제</span>
+          </div>
+          <div class="delete-modal-body">
+            <p class="delete-modal-desc">다음 location을 nginx.conf에서 삭제합니다.</p>
+            <div class="delete-modal-path">{{ deleteTarget?.path }}</div>
+            <p class="delete-modal-warn">이 작업은 되돌릴 수 없습니다.</p>
+          </div>
+          <div class="delete-modal-actions">
+            <button class="delete-modal-cancel" @click="cancelDelete">취소</button>
+            <button class="delete-modal-confirm" @click="doDelete">삭제</button>
+          </div>
+        </div>
+      </div>
+    </Teleport>
+
     <!-- Legend -->
     <div class="legend">
       <span class="legend-title">우선순위:</span>
@@ -155,6 +214,23 @@ const props = defineProps({
 })
 
 const jumpToLine = inject('jumpToLine', null)
+const deleteNode = inject('deleteNode', null)
+const deleteTarget = ref(null)
+
+function confirmDelete(node, path) {
+  if (!deleteNode) return
+  deleteTarget.value = { node, path }
+}
+
+function doDelete() {
+  if (!deleteTarget.value) return
+  deleteNode(deleteTarget.value.node)
+  deleteTarget.value = null
+}
+
+function cancelDelete() {
+  deleteTarget.value = null
+}
 
 const servers    = computed(() => analyzeLocations(props.ast))
 const annotated  = computed(() => servers.value.map(srv => annotateEvaluationOrder(srv.locations)))
@@ -163,13 +239,82 @@ const expandedLocs = ref({})
 const globalUrl = ref('')
 const globalResult = ref(null)
 
+// ── Location 검색 ──────────────────────────────────────────
+const searchQuery = ref('')
+const searchInputRef = ref(null)
+
+function clearSearch() {
+  searchQuery.value = ''
+  searchInputRef.value?.focus()
+}
+
+function locMatchesQuery(loc, q) {
+  if (!q) return true
+  const lower = q.toLowerCase()
+  // path 매칭
+  if (loc.path.toLowerCase().includes(lower)) return true
+  // directive 값 매칭 (proxy_pass, alias 등)
+  if (loc.node?.children) {
+    for (const child of loc.node.children) {
+      if (child.type === 'directive') {
+        if (child.name.toLowerCase().includes(lower)) return true
+        if (child.values.some(v => v.toLowerCase().includes(lower))) return true
+      }
+    }
+  }
+  return false
+}
+
+function isLocMatch(loc) {
+  return locMatchesQuery(loc, searchQuery.value)
+}
+
+const filteredLocs = computed(() => {
+  const q = searchQuery.value
+  return servers.value.map(srv =>
+    srv.locations.filter(loc => locMatchesQuery(loc, q))
+  )
+})
+
+const searchMatchCount = computed(() =>
+  filteredLocs.value.reduce((sum, locs) => sum + locs.length, 0)
+)
+
+// 검색어 입력 시 모든 서버 블록 자동 펼침
+watch(searchQuery, (q) => {
+  if (q) {
+    const next = {}
+    servers.value.forEach((_, i) => { next[i] = true })
+    expandedServers.value = next
+  }
+})
+
 const LOC_TRACKED_DIRECTIVES = [
-  'proxy_pass', 'root', 'alias', 'try_files', 'expires',
-  'return', 'rewrite', 'index', 'fastcgi_pass', 'fastcgi_index',
-  'add_header', 'limit_req', 'limit_conn',
-  'deny', 'allow', 'auth_basic', 'auth_basic_user_file',
+  // 프록시
+  'proxy_pass', 'proxy_set_header', 'proxy_hide_header', 'proxy_pass_header',
+  'proxy_cookie_path', 'proxy_cookie_domain',
+  'proxy_connect_timeout', 'proxy_read_timeout', 'proxy_send_timeout',
+  'proxy_buffering', 'proxy_buffer_size', 'proxy_buffers', 'proxy_busy_buffers_size',
+  'proxy_cache', 'proxy_cache_valid', 'proxy_cache_bypass', 'proxy_no_cache',
+  'proxy_redirect', 'proxy_http_version', 'proxy_intercept_errors',
+  'proxy_next_upstream', 'proxy_request_buffering', 'proxy_ignore_headers',
+  'proxy_set_body', 'proxy_limit_rate',
+  'proxy_ssl_protocols', 'proxy_ssl_verify',
+  // 파일 서빙
+  'root', 'alias', 'try_files', 'autoindex', 'index', 'expires',
+  // 응답 제어
+  'return', 'rewrite', 'add_header',
+  // FastCGI
+  'fastcgi_pass', 'fastcgi_index',
+  // 접근 제어
+  'limit_req', 'limit_conn', 'deny', 'allow', 'auth_basic', 'auth_basic_user_file',
+  // 로그
   'access_log', 'error_log',
 ]
+
+function locHasDirective(node, name) {
+  return node?.children?.some(c => c.type === 'directive' && c.name === name) ?? false
+}
 
 function getLocDetails(node) {
   if (!node?.children) return []
@@ -559,15 +704,25 @@ function modInfo(modifier) {
 .eval-note { color: #6b7280; }
 .modifier-label { font-weight: 500; }
 
+/* Type icons */
+.loc-type-icon {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+.loc-icon-proxy { color: #60a5fa; }
+.loc-icon-alias { color: #34d399; }
+
 /* Expand button */
 .loc-expand-btn {
   margin-left: auto;
   background: none;
-  border: 1px solid #2a2a3a;
+  border: 1px solid rgba(167,139,250,0.25);
   border-radius: 4px;
-  color: #6b7280;
+  color: #a78bfa;
   font-size: 11px;
-  padding: 1px 7px;
+  font-weight: 600;
+  padding: 1px 8px;
   cursor: pointer;
   flex-shrink: 0;
   transition: color 0.1s, border-color 0.1s, background 0.1s;
@@ -575,9 +730,29 @@ function modInfo(modifier) {
 }
 .loc-expand-btn:hover,
 .loc-expand-btn.active {
-  color: #a78bfa;
-  border-color: rgba(167,139,250,0.4);
-  background: rgba(167,139,250,0.08);
+  color: #c4b5fd;
+  border-color: rgba(167,139,250,0.5);
+  background: rgba(167,139,250,0.1);
+}
+
+/* Delete button */
+.loc-delete-btn {
+  background: none;
+  border: 1px solid rgba(248, 113, 113, 0.25);
+  border-radius: 4px;
+  color: #f87171;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 1px 8px;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: color 0.1s, border-color 0.1s, background 0.1s;
+  line-height: 1.6;
+}
+.loc-delete-btn:hover {
+  color: #fca5a5;
+  border-color: rgba(248, 113, 113, 0.5);
+  background: rgba(248, 113, 113, 0.1);
 }
 
 /* Inline detail */
@@ -622,6 +797,36 @@ function modInfo(modifier) {
   font-family: 'JetBrains Mono', 'Fira Code', monospace;
   font-size: 11px;
   word-break: break-all;
+}
+
+/* Search bar */
+.search-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: #16161d;
+  border: 1px solid #2a2a3a;
+  border-radius: 8px;
+}
+
+.search-input {
+  flex: 1;
+  background: none;
+  border: none;
+  outline: none;
+  color: #d1d5db;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  min-width: 0;
+}
+.search-input::placeholder { color: #3a3a4f; }
+
+.search-count {
+  font-size: 11px;
+  color: #a78bfa;
+  white-space: nowrap;
+  font-family: 'JetBrains Mono', monospace;
 }
 
 /* Global test panel */
@@ -796,5 +1001,110 @@ function modInfo(modifier) {
 
 .dir-tooltip-link:hover {
   text-decoration: underline;
+}
+
+/* Delete confirm modal */
+.delete-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  backdrop-filter: blur(2px);
+}
+
+.delete-modal {
+  background: #1c1c26;
+  border: 1px solid #3a3a4f;
+  border-radius: 12px;
+  width: 360px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7);
+  overflow: hidden;
+}
+
+.delete-modal-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 18px;
+  background: #16161d;
+  border-bottom: 1px solid #2a2a3a;
+  font-size: 14px;
+  font-weight: 700;
+  color: #f87171;
+  letter-spacing: 0.02em;
+}
+
+.delete-modal-body {
+  padding: 18px 18px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.delete-modal-desc {
+  font-size: 13px;
+  color: #9ca3af;
+  margin: 0;
+}
+
+.delete-modal-path {
+  background: #0f0f13;
+  border: 1px solid #2a2a3a;
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-size: 13px;
+  color: #60a5fa;
+  word-break: break-all;
+}
+
+.delete-modal-warn {
+  font-size: 11px;
+  color: #6b7280;
+  margin: 0;
+}
+
+.delete-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 12px 18px 16px;
+  border-top: 1px solid #2a2a3a;
+}
+
+.delete-modal-cancel {
+  background: none;
+  border: 1px solid #2a2a3a;
+  border-radius: 6px;
+  color: #9ca3af;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 7px 18px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+.delete-modal-cancel:hover {
+  background: #2a2a3a;
+  color: #d1d5db;
+}
+
+.delete-modal-confirm {
+  background: rgba(248, 113, 113, 0.15);
+  border: 1px solid rgba(248, 113, 113, 0.4);
+  border-radius: 6px;
+  color: #f87171;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 7px 18px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+.delete-modal-confirm:hover {
+  background: rgba(248, 113, 113, 0.25);
+  border-color: rgba(248, 113, 113, 0.6);
+  color: #fca5a5;
 }
 </style>

@@ -27,25 +27,39 @@
           </div>
           <div class="modal-body">
             <section>
-              <h3>사용법</h3>
-              <p>nginx.conf를 붙여넣고 Parse &amp; Format을 누르세요.</p>
+              <h3>시작하기</h3>
+              <p>왼쪽 에디터에 nginx.conf 내용을 붙여넣고 <code>Parse &amp; Format</code>을 누르세요. 라인 번호가 함께 표시되며 예시 파일로 빠르게 테스트할 수 있습니다.</p>
             </section>
+
             <section>
               <h3>탭 설명</h3>
               <ul>
-                <li><code>Formatted</code> — 들여쓰기/하이라이팅 + 라인 번호</li>
-                <li><code>Tree</code> — 블록 구조 탐색 (클릭 시 원본 줄로 이동)</li>
-                <li><code>Summary</code> — 핵심 설정 요약</li>
-                <li><code>Lint</code> — 오류·경고 목록</li>
-                <li><code>Locations</code> — location 우선순위 + URL 매칭 테스트</li>
+                <li><code>Formatted</code> — 구문 하이라이팅 + 라인 번호. 들여쓰기(2/4 spaces, Tab) 선택 및 복사 가능</li>
+                <li><code>Tree</code> — 블록 계층 구조 탐색. 노드 클릭 시 원본 위치로 스크롤·선택</li>
+                <li><code>Summary</code> — 서버별 Virtual Host 카드. listen·server_name·주요 directive 표시. directive 이름 hover 시 nginx 공식 문서 툴팁</li>
+                <li><code>Lint</code> — 오류·경고 목록. 탭 배지로 건수 표시. 항목 클릭 시 해당 라인으로 이동</li>
+                <li><code>Locations</code> — location 우선순위 분석, 전역 URL 매칭 테스트, 검색, 삭제</li>
+                <li><code>Diagram</code> — 서버 → 백엔드 연결 시각화. proxy_pass(파란색)·alias(초록색)·upstream 자동 구분</li>
               </ul>
             </section>
+
             <section>
               <h3>Locations 탭</h3>
               <ul>
-                <li>전역 테스트: <code>https://host/path</code> 입력 → server_name·포트·location 통합 매칭</li>
-                <li>서버별 테스트: 각 서버 블록 내 URL 필드에 경로 입력</li>
-                <li>location 행 클릭 → 원본 위치로 이동</li>
+                <li><strong>전역 URL 테스트</strong> — <code>https://host/path</code> 입력 후 테스트. server_name·포트·location을 nginx 규칙으로 통합 매칭. 결과 클릭 시 해당 location으로 이동</li>
+                <li><strong>검색</strong> — path, directive명(예: <code>proxy_pass</code>), 값으로 실시간 필터. 매칭 서버·location만 표시</li>
+                <li><strong>상세</strong> — location별 설정된 directive 목록 펼치기. 키 hover 시 공식 문서 툴팁</li>
+                <li><strong>삭제</strong> — location 블록을 nginx.conf에서 직접 제거 후 자동 재파싱</li>
+                <li>location 행 클릭 → 원본 에디터의 해당 줄로 스크롤·선택</li>
+              </ul>
+            </section>
+
+            <section>
+              <h3>Diagram 탭</h3>
+              <ul>
+                <li>서버 블록과 proxy_pass·alias 대상을 노드·화살표로 시각화</li>
+                <li>upstream 블록은 멤버 서버 목록과 함께 별도 그룹 노드로 표시</li>
+                <li>노드 클릭 → 연결된 노드·선 강조, 나머지 흐리게 처리. 배경 클릭으로 초기화</li>
               </ul>
             </section>
           </div>
@@ -281,6 +295,33 @@ function jumpToLine(line) {
 }
 
 provide('jumpToLine', jumpToLine)
+
+function deleteNode(node) {
+  if (!node?.line) return
+  const lines = input.value.split('\n')
+  const startIdx = node.line - 1  // 0-indexed
+
+  // 중괄호 카운팅으로 블록 끝 라인 탐색
+  let depth = 0
+  let endIdx = startIdx
+  let found = false
+  for (let i = startIdx; i < lines.length; i++) {
+    for (const ch of lines[i]) {
+      if (ch === '{') depth++
+      else if (ch === '}') {
+        depth--
+        if (depth === 0) { endIdx = i; found = true; break }
+      }
+    }
+    if (found) break
+  }
+  if (!found) return
+
+  lines.splice(startIdx, endIdx - startIdx + 1)
+  input.value = lines.join('\n').replace(/\n{3,}/g, '\n\n')
+  run()
+}
+provide('deleteNode', deleteNode)
 
 const lintErrorCount = computed(() => lintIssues.value.filter(i => i.severity === 'error').length)
 const lintWarnCount  = computed(() => lintIssues.value.filter(i => i.severity === 'warning').length)
@@ -730,7 +771,7 @@ onMounted(() => {
   background: #1c1c26;
   border: 1px solid #2a2a3a;
   border-radius: 10px;
-  width: 520px;
+  width: 580px;
   max-width: 90vw;
   max-height: 80vh;
   display: flex;
@@ -804,6 +845,11 @@ onMounted(() => {
   font-family: 'JetBrains Mono', monospace;
   font-size: 12px;
   color: #c4b5fd;
+}
+
+.modal-body strong {
+  color: #d1d5db;
+  font-weight: 600;
 }
 
 /* Sample dropdown */
