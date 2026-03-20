@@ -37,6 +37,17 @@
       <div class="pane pane-left">
         <div class="pane-header">
           <span class="pane-label">nginx.conf</span>
+          <div class="sample-dropdown-wrap" ref="sampleWrapRef">
+            <button class="btn-ghost sample-btn" @click="toggleSampleMenu">예시 불러오기 ▾</button>
+            <div v-if="sampleMenuOpen" class="sample-menu">
+              <button
+                v-for="s in SAMPLES"
+                :key="s.key"
+                class="sample-item"
+                @click="loadSample(s)"
+              >{{ s.label }}</button>
+            </div>
+          </div>
           <button class="btn-ghost" @click="clearInput" title="지우기">지우기</button>
         </div>
         <textarea
@@ -140,6 +151,7 @@ import { ref, computed, onMounted } from 'vue'
 import MobileBlock from './components/MobileBlock.vue'
 import { parse, format, highlight, summarize } from './utils/nginxParser.js'
 import { lint } from './utils/nginxLint.js'
+import { SAMPLES } from './utils/nginxSamples.js'
 import TreeNode from './components/TreeNode.vue'
 import SummaryView from './components/SummaryView.vue'
 import LintView from './components/LintView.vue'
@@ -147,6 +159,8 @@ import LocationAnalyzer from './components/LocationAnalyzer.vue'
 
 const isMobile = ref(false)
 const showHelp = ref(false)
+const sampleMenuOpen = ref(false)
+const sampleWrapRef = ref(null)
 const input = ref('')
 const parsed = ref(false)
 const error = ref(null)
@@ -221,8 +235,24 @@ async function copyFormatted() {
   } catch {}
 }
 
+function toggleSampleMenu() {
+  sampleMenuOpen.value = !sampleMenuOpen.value
+}
+
+function loadSample(s) {
+  input.value = s.conf
+  sampleMenuOpen.value = false
+  run()
+}
+
 onMounted(() => {
   isMobile.value = window.innerWidth < 768
+
+  document.addEventListener('click', (e) => {
+    if (sampleWrapRef.value && !sampleWrapRef.value.contains(e.target)) {
+      sampleMenuOpen.value = false
+    }
+  })
 })
 </script>
 
@@ -566,6 +596,45 @@ onMounted(() => {
 .indent-btn:last-child { border-right: none; }
 .indent-btn:hover { color: #d1d5db; background: #1c1c26; }
 .indent-btn.active { background: #2a2a3a; color: #a78bfa; font-weight: 600; }
+
+/* Sample dropdown */
+.sample-dropdown-wrap {
+  position: relative;
+}
+
+.sample-btn {
+  white-space: nowrap;
+}
+
+.sample-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  background: #1c1c26;
+  border: 1px solid #2a2a3a;
+  border-radius: 7px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  z-index: 100;
+  min-width: 160px;
+  overflow: hidden;
+}
+
+.sample-item {
+  display: block;
+  width: 100%;
+  background: none;
+  border: none;
+  border-bottom: 1px solid #2a2a3a;
+  color: #d1d5db;
+  font-size: 13px;
+  padding: 9px 14px;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.1s;
+}
+
+.sample-item:last-child { border-bottom: none; }
+.sample-item:hover { background: #2a2a3a; color: #a78bfa; }
 </style>
 
 <style>

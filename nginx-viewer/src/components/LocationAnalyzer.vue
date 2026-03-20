@@ -6,71 +6,77 @@
     </div>
 
     <div v-for="(srv, si) in servers" :key="si" class="server-block">
-      <!-- Server header -->
-      <div class="server-header">
+      <!-- Server header (clickable to expand/collapse) -->
+      <div class="server-header" @click="toggleServer(si)">
+        <span class="expand-icon">{{ expandedServers[si] ? '▾' : '▸' }}</span>
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
         <span class="server-name">{{ srv.serverNames.join(', ') || '(unnamed)' }}</span>
         <span v-if="srv.listens.length" class="server-listen">{{ srv.listens.join(', ') }}</span>
+        <span class="loc-count-badge">{{ srv.locations.length }} locations</span>
       </div>
 
-      <!-- URL Match Tester -->
-      <div class="match-tester">
-        <div class="match-input-row">
-          <span class="match-prefix">URL</span>
-          <input
-            v-model="testUrls[si]"
-            class="match-input"
-            placeholder="/api/users"
-            spellcheck="false"
-            @input="clearMatch(si)"
-          />
-          <button class="btn-test" @click="doMatch(si, srv.locations)">테스트</button>
-          <button v-if="matchResults[si]" class="btn-clear" @click="clearMatch(si)">✕</button>
-        </div>
-        <div v-if="matchResults[si]" class="match-result" :class="matchResults[si].found ? 'match-hit' : 'match-miss'">
-          <template v-if="matchResults[si].found">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-            <span>{{ matchResults[si].reason }}</span>
-          </template>
-          <template v-else>
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
-            매칭되는 location이 없습니다.
-          </template>
-        </div>
-      </div>
-
-      <!-- Location list -->
-      <div v-if="srv.locations.length === 0" class="no-locations">location 블록이 없습니다.</div>
-      <div v-else class="location-list">
-        <div
-          v-for="(loc, li) in annotated[si]"
-          :key="li"
-          class="location-row"
-          :class="{
-            'loc-matched': matchResults[si] && matchResults[si].index === li,
-            'loc-duplicate': loc.duplicate,
-          }"
-        >
-          <div class="loc-main">
-            <!-- Modifier badge -->
-            <span
-              class="modifier-badge"
-              :style="{ color: modInfo(loc.modifier).color, borderColor: modInfo(loc.modifier).color + '55' }"
-            >{{ modInfo(loc.modifier).symbol || '∅' }}</span>
-
-            <!-- Path -->
-            <span class="loc-path">{{ loc.path }}</span>
-
-            <!-- Match indicator -->
-            <span v-if="matchResults[si] && matchResults[si].index === li" class="matched-tag">매칭됨</span>
-            <span v-if="loc.duplicate" class="dup-tag">중복 패턴</span>
+      <template v-if="expandedServers[si]">
+        <!-- URL Match Tester -->
+        <div class="match-tester">
+          <div class="match-input-row">
+            <span class="match-prefix">URL</span>
+            <input
+              v-model="testUrls[si]"
+              class="match-input"
+              placeholder="/api/users 또는 https://example.com/api/users"
+              spellcheck="false"
+              @input="clearMatch(si)"
+            />
+            <button class="btn-test" @click="doMatch(si, srv.locations)">테스트</button>
+            <button v-if="matchResults[si]" class="btn-clear" @click="clearMatch(si)">✕</button>
           </div>
-          <div class="loc-meta">
-            <span class="eval-note">{{ loc.evalNote }}</span>
-            <span class="modifier-label" :style="{ color: modInfo(loc.modifier).color }">{{ modInfo(loc.modifier).label }}</span>
+          <div v-if="matchResults[si]" class="match-result" :class="matchResults[si].found ? 'match-hit' : 'match-miss'">
+            <template v-if="matchResults[si].found">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              <span>{{ matchResults[si].reason }}</span>
+              <span v-if="matchResults[si].extractedPath" class="extracted-path">경로 추출: {{ matchResults[si].extractedPath }}</span>
+            </template>
+            <template v-else>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+              매칭되는 location이 없습니다.
+              <span v-if="matchResults[si].extractedPath" class="extracted-path">경로 추출: {{ matchResults[si].extractedPath }}</span>
+            </template>
           </div>
         </div>
-      </div>
+
+        <!-- Location list -->
+        <div v-if="srv.locations.length === 0" class="no-locations">location 블록이 없습니다.</div>
+        <div v-else class="location-list">
+          <div
+            v-for="(loc, li) in annotated[si]"
+            :key="li"
+            class="location-row"
+            :class="{
+              'loc-matched': matchResults[si] && matchResults[si].index === li,
+              'loc-duplicate': loc.duplicate,
+            }"
+          >
+            <div class="loc-main">
+              <!-- Modifier badge -->
+              <span
+                class="modifier-badge"
+                :style="{ color: modInfo(loc.modifier).color, borderColor: modInfo(loc.modifier).color + '55' }"
+              >{{ modInfo(loc.modifier).symbol || '∅' }}</span>
+
+              <!-- Path -->
+              <span class="loc-path">{{ loc.path }}</span>
+
+              <!-- Match indicator -->
+              <span v-if="matchResults[si] && matchResults[si].index === li" class="matched-tag">매칭됨</span>
+              <span v-if="loc.duplicate" class="dup-tag">중복 패턴</span>
+            </div>
+            <div class="loc-meta">
+              <span class="eval-note">{{ loc.evalNote }}</span>
+              <span class="modifier-label" :style="{ color: modInfo(loc.modifier).color }">{{ modInfo(loc.modifier).label }}</span>
+            </div>
+          </div>
+        </div>
+      </template>
     </div>
 
     <!-- Legend -->
@@ -84,7 +90,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { analyzeLocations, matchLocation, annotateEvaluationOrder, MODIFIER_LABELS } from '../utils/locationAnalyzer.js'
 
 const props = defineProps({
@@ -95,18 +101,47 @@ const servers    = computed(() => analyzeLocations(props.ast))
 const annotated  = computed(() => servers.value.map(srv => annotateEvaluationOrder(srv.locations)))
 const testUrls   = ref([])
 const matchResults = ref([])
+const expandedServers = ref({})
+
+// 서버 목록이 바뀔 때 expandedServers 초기화
+watch(servers, (newServers) => {
+  const next = {}
+  newServers.forEach((_, i) => {
+    next[i] = i === 0  // 첫 번째 서버만 펼치고 나머지는 접음
+  })
+  expandedServers.value = next
+  testUrls.value = []
+  matchResults.value = []
+}, { immediate: true })
+
+function toggleServer(si) {
+  expandedServers.value = { ...expandedServers.value, [si]: !expandedServers.value[si] }
+}
 
 function modInfo(modifier) {
   return MODIFIER_LABELS[modifier] || { symbol: '?', label: '', color: '#6b7280' }
 }
 
+function extractPath(raw) {
+  try {
+    return new URL(raw).pathname
+  } catch {
+    return raw.startsWith('/') ? raw : '/' + raw
+  }
+}
+
 function doMatch(si, locations) {
-  const uri = testUrls.value[si] || ''
+  const raw = testUrls.value[si] || ''
+  const uri = extractPath(raw)
   const result = matchLocation(locations, uri)
   matchResults.value = [...matchResults.value]
+
+  // 원본과 추출된 경로가 다를 때만 extractedPath 표시
+  const showExtracted = uri !== raw ? uri : null
+
   matchResults.value[si] = result
-    ? { found: true, index: result.index, reason: result.reason }
-    : { found: false }
+    ? { found: true, index: result.index, reason: result.reason, extractedPath: showExtracted }
+    : { found: false, extractedPath: showExtracted }
 }
 
 function clearMatch(si) {
@@ -150,6 +185,20 @@ function clearMatch(si) {
   border-bottom: 1px solid #2a2a3a;
   font-size: 12px;
   color: #9ca3af;
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.1s;
+}
+
+.server-header:hover {
+  background: #22222e;
+}
+
+.expand-icon {
+  font-size: 11px;
+  color: #6b7280;
+  flex-shrink: 0;
+  width: 12px;
 }
 
 .server-name {
@@ -162,6 +211,18 @@ function clearMatch(si) {
   color: #6b7280;
   font-family: monospace;
   font-size: 11px;
+}
+
+.loc-count-badge {
+  margin-left: auto;
+  background: rgba(167, 139, 250, 0.1);
+  color: #7c3aed;
+  border: 1px solid rgba(167, 139, 250, 0.2);
+  border-radius: 10px;
+  padding: 1px 8px;
+  font-size: 10px;
+  font-weight: 600;
+  flex-shrink: 0;
 }
 
 /* Match tester */
@@ -239,6 +300,13 @@ function clearMatch(si) {
 
 .match-hit  { background: rgba(74,222,128,0.1); color: #4ade80; border: 1px solid rgba(74,222,128,0.25); }
 .match-miss { background: rgba(239,68,68,0.08); color: #fca5a5; border: 1px solid rgba(239,68,68,0.2); }
+
+.extracted-path {
+  margin-left: auto;
+  font-size: 11px;
+  opacity: 0.7;
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+}
 
 /* Location list */
 .no-locations {
