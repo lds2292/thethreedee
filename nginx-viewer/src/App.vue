@@ -37,7 +37,6 @@
                 <li><code>Formatted</code> — 구문 하이라이팅 + 라인 번호. 들여쓰기(2/4 spaces, Tab) 선택 및 복사 가능</li>
                 <li><code>Tree</code> — 블록 계층 구조 탐색. 노드 클릭 시 원본 위치로 스크롤·선택</li>
                 <li><code>Summary</code> — 서버별 Virtual Host 카드. listen·server_name·주요 directive 표시. directive 이름 hover 시 nginx 공식 문서 툴팁</li>
-                <li><code>Lint</code> — 오류·경고 목록. 탭 배지로 건수 표시. 항목 클릭 시 해당 라인으로 이동</li>
                 <li><code>Locations</code> — location 우선순위 분석, 전역 URL 매칭 테스트, 검색, 삭제</li>
                 <li><code>Diagram</code> — 서버 → 백엔드 연결 시각화. proxy_pass(파란색)·alias(초록색)·upstream 자동 구분</li>
               </ul>
@@ -160,10 +159,30 @@
           <p>nginx.conf를 붙여넣고<br>Parse &amp; Format을 누르세요</p>
         </div>
 
+        <!-- Find Bar (Formatted tab) -->
+        <Transition name="find">
+          <div v-if="findOpen && parsed && !error && activeTab === 'formatted'" class="find-bar">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input
+              ref="findInputRef"
+              v-model="findQuery"
+              class="find-input"
+              placeholder="검색..."
+              @keydown.enter.exact.prevent="findNext"
+              @keydown.shift.enter.prevent="findPrev"
+              @keydown.escape.prevent="closeFindBar"
+            />
+            <span class="find-count" :class="{ 'find-count-empty': findQuery && !findMatches.length }">{{ findCountText }}</span>
+            <button class="find-nav" @click="findPrev" :disabled="!findMatches.length" title="Previous">↑</button>
+            <button class="find-nav" @click="findNext" :disabled="!findMatches.length" title="Next">↓</button>
+            <button class="find-close" @click="closeFindBar">✕</button>
+          </div>
+        </Transition>
+
         <!-- Formatted Tab -->
-        <div v-if="parsed && !error && activeTab === 'formatted'" class="output-area formatted-area">
+        <div v-if="parsed && !error && activeTab === 'formatted'" class="output-area formatted-area" ref="formattedAreaRef">
           <div class="code-with-lines">
-            <div v-for="(line, i) in highlightedLines" :key="i" class="code-line">
+            <div v-for="(line, i) in highlightedLinesWithSearch" :key="i" class="code-line">
               <span class="line-num">{{ i + 1 }}</span>
               <span class="line-content" v-html="line"></span>
             </div>
@@ -180,18 +199,13 @@
           <SummaryView :summary="summaryData" />
         </div>
 
-        <!-- Lint Tab -->
-        <div v-if="parsed && !error && activeTab === 'lint'" class="output-area summary-area">
-          <LintView :issues="lintIssues" />
-        </div>
-
         <!-- Locations Tab -->
         <div v-if="parsed && !error && activeTab === 'locations'" class="output-area summary-area">
           <LocationAnalyzer :ast="ast" />
         </div>
 
         <!-- Diagram Tab -->
-        <div v-if="parsed && !error && activeTab === 'diagram'" class="output-area summary-area">
+        <div v-if="parsed && !error && activeTab === 'diagram'" class="output-area diagram-area">
           <DiagramView :ast="ast" />
         </div>
       </div>
@@ -200,14 +214,12 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, provide } from 'vue'
+import { ref, computed, onMounted, provide, watch, nextTick } from 'vue'
 import MobileBlock from './components/MobileBlock.vue'
 import { parse, format, highlight, summarize } from './utils/nginxParser.js'
-import { lint } from './utils/nginxLint.js'
 import { SAMPLES } from './utils/nginxSamples.js'
 import TreeNode from './components/TreeNode.vue'
 import SummaryView from './components/SummaryView.vue'
-import LintView from './components/LintView.vue'
 import LocationAnalyzer from './components/LocationAnalyzer.vue'
 import DiagramView from './components/DiagramView.vue'
 
@@ -229,7 +241,6 @@ const parsed = ref(false)
 const error = ref(null)
 const ast = ref([])
 const summaryData = ref(null)
-const lintIssues = ref([])
 const activeTab = ref('formatted')
 const copied = ref(false)
 
@@ -323,14 +334,10 @@ function deleteNode(node) {
 }
 provide('deleteNode', deleteNode)
 
-const lintErrorCount = computed(() => lintIssues.value.filter(i => i.severity === 'error').length)
-const lintWarnCount  = computed(() => lintIssues.value.filter(i => i.severity === 'warning').length)
-
 const tabs = computed(() => [
   { key: 'formatted',  label: 'Formatted' },
   { key: 'tree',       label: 'Tree' },
   { key: 'summary',    label: 'Summary' },
-  { key: 'lint',       label: 'Lint', badge: lintErrorCount.value || lintWarnCount.value || null, badgeColor: lintErrorCount.value ? 'error' : 'warning' },
   { key: 'locations',  label: 'Locations' },
   { key: 'diagram',    label: 'Diagram' },
 ])
@@ -359,7 +366,6 @@ function run() {
 
   ast.value = result.ast
   summaryData.value = summarize(result.ast)
-  lintIssues.value = lint(result.ast)
   parsed.value = true
 }
 
@@ -368,7 +374,6 @@ function clearInput() {
   parsed.value = false
   error.value = null
   ast.value = []
-  lintIssues.value = []
 }
 
 async function copyFormatted() {
@@ -389,8 +394,137 @@ function loadSample(s) {
   run()
 }
 
+// ── Find (Formatted tab) ──────────────────────────────────────
+const findOpen      = ref(false)
+const findQuery     = ref('')
+const findInputRef  = ref(null)
+const findCurrentIdx = ref(-1)
+const formattedAreaRef = ref(null)
+
+const findMatches = computed(() => {
+  if (!findQuery.value || !formattedCode.value) return []
+  const q = findQuery.value.toLowerCase()
+  const lines = formattedCode.value.split('\n')
+  const matches = []
+  for (let li = 0; li < lines.length; li++) {
+    const lower = lines[li].toLowerCase()
+    let ci = lower.indexOf(q)
+    while (ci !== -1) {
+      matches.push({ li, ci })
+      ci = lower.indexOf(q, ci + 1)
+    }
+  }
+  return matches
+})
+
+const findCountText = computed(() => {
+  if (!findQuery.value) return ''
+  const total = findMatches.value.length
+  if (total === 0) return '결과 없음'
+  return `${findCurrentIdx.value >= 0 ? findCurrentIdx.value + 1 : 1} / ${total}`
+})
+
+function injectMarks(html, lineMatches, qLen, currentGlobalIdx) {
+  const tmp = document.createElement('div')
+  tmp.innerHTML = html
+  let charOffset = 0
+
+  function walk(node) {
+    if (node.nodeType === Node.TEXT_NODE) {
+      const nodeLen = node.textContent.length
+      const localMatches = []
+      for (const m of lineMatches) {
+        const s = m.ci - charOffset
+        if (s >= 0 && s + qLen <= nodeLen) {
+          localMatches.push({ s, e: s + qLen, isCurrent: m.gi === currentGlobalIdx })
+        }
+      }
+      charOffset += nodeLen
+      if (localMatches.length === 0) return
+
+      localMatches.sort((a, b) => a.s - b.s)
+      const text = node.textContent
+      const frag = document.createDocumentFragment()
+      let pos = 0
+      for (const { s, e, isCurrent } of localMatches) {
+        if (s > pos) frag.appendChild(document.createTextNode(text.slice(pos, s)))
+        const mark = document.createElement('mark')
+        mark.className = isCurrent ? 'search-hl search-hl-cur' : 'search-hl'
+        mark.textContent = text.slice(s, e)
+        frag.appendChild(mark)
+        pos = e
+      }
+      if (pos < text.length) frag.appendChild(document.createTextNode(text.slice(pos)))
+      node.parentNode.replaceChild(frag, node)
+    } else {
+      for (const child of [...node.childNodes]) walk(child)
+    }
+  }
+
+  walk(tmp)
+  return tmp.innerHTML
+}
+
+const highlightedLinesWithSearch = computed(() => {
+  if (!findQuery.value || !findMatches.value.length) return highlightedLines.value
+  const byLine = {}
+  findMatches.value.forEach((m, gi) => {
+    ;(byLine[m.li] ??= []).push({ ...m, gi })
+  })
+  const qLen = findQuery.value.length
+  return highlightedLines.value.map((lineHtml, li) =>
+    byLine[li] ? injectMarks(lineHtml, byLine[li], qLen, findCurrentIdx.value) : lineHtml
+  )
+})
+
+function scrollToCurrentMatch() {
+  nextTick(() => {
+    formattedAreaRef.value?.querySelector('.search-hl-cur')?.scrollIntoView({ block: 'center', behavior: 'smooth' })
+  })
+}
+
+function openFindBar() {
+  findOpen.value = true
+  nextTick(() => findInputRef.value?.focus())
+}
+
+function closeFindBar() {
+  findOpen.value = false
+  findQuery.value = ''
+  findCurrentIdx.value = -1
+}
+
+function findNext() {
+  if (!findMatches.value.length) return
+  findCurrentIdx.value = findCurrentIdx.value < findMatches.value.length - 1
+    ? findCurrentIdx.value + 1 : 0
+  scrollToCurrentMatch()
+}
+
+function findPrev() {
+  if (!findMatches.value.length) return
+  findCurrentIdx.value = findCurrentIdx.value <= 0
+    ? findMatches.value.length - 1 : findCurrentIdx.value - 1
+  scrollToCurrentMatch()
+}
+
+watch(findQuery, () => {
+  findCurrentIdx.value = findMatches.value.length ? 0 : -1
+  scrollToCurrentMatch()
+})
+
 onMounted(() => {
   isMobile.value = window.innerWidth < 768
+
+  document.addEventListener('keydown', (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
+      if (parsed.value && !error.value && activeTab.value === 'formatted') {
+        e.preventDefault()
+        openFindBar()
+      }
+    }
+    if (e.key === 'Escape' && findOpen.value) closeFindBar()
+  })
 
   document.addEventListener('click', (e) => {
     if (sampleWrapRef.value && !sampleWrapRef.value.contains(e.target)) {
@@ -729,6 +863,13 @@ onMounted(() => {
   padding: 14px;
 }
 
+.diagram-area {
+  overflow: hidden;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
 /* Indent selector */
 .indent-selector {
   display: flex;
@@ -755,6 +896,79 @@ onMounted(() => {
 .indent-btn:last-child { border-right: none; }
 .indent-btn:hover { color: #d1d5db; background: #1c1c26; }
 .indent-btn.active { background: #2a2a3a; color: #a78bfa; font-weight: 600; }
+
+/* Find Bar */
+.find-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  background: #16161d;
+  border-bottom: 1px solid #2a2a3a;
+  flex-shrink: 0;
+  color: #6b7280;
+}
+
+.find-input {
+  flex: 1;
+  min-width: 0;
+  max-width: 240px;
+  background: #0f0f13;
+  border: 1px solid #3a3a4f;
+  border-radius: 5px;
+  color: #d1d5db;
+  font-size: 12px;
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  padding: 3px 8px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.find-input:focus { border-color: #a78bfa; }
+.find-input::placeholder { color: #3a3a4f; }
+
+.find-count {
+  font-size: 11px;
+  color: #6b7280;
+  white-space: nowrap;
+  min-width: 52px;
+  text-align: center;
+}
+.find-count-empty { color: #ef4444; }
+
+.find-nav {
+  background: none;
+  border: 1px solid #2a2a3a;
+  border-radius: 4px;
+  color: #9ca3af;
+  font-size: 12px;
+  width: 24px;
+  height: 24px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  transition: color 0.15s, border-color 0.15s;
+  flex-shrink: 0;
+}
+.find-nav:hover:not(:disabled) { color: #d1d5db; border-color: #4b5563; }
+.find-nav:disabled { opacity: 0.35; cursor: default; }
+
+.find-close {
+  background: none;
+  border: none;
+  color: #6b7280;
+  font-size: 13px;
+  cursor: pointer;
+  padding: 2px 5px;
+  border-radius: 4px;
+  line-height: 1;
+  transition: color 0.15s;
+}
+.find-close:hover { color: #d1d5db; }
+
+.find-enter-active, .find-leave-active { transition: opacity 0.12s, transform 0.12s; }
+.find-enter-from, .find-leave-to { opacity: 0; transform: translateY(-4px); }
 
 /* Modal */
 .modal-backdrop {
@@ -903,4 +1117,8 @@ onMounted(() => {
 .code-with-lines .hl-include-kw  { color: #f59e0b; font-weight: 700; }
 .code-with-lines .hl-include-path{ color: #fcd34d; }
 .code-with-lines .hl-warn        { color: #f59e0b; font-size: 11px; }
+
+/* Search highlight */
+.search-hl     { background: rgba(234,179,8,0.35); border-radius: 2px; }
+.search-hl-cur { background: rgba(234,179,8,0.75); outline: 1px solid #eab308; }
 </style>
