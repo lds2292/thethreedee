@@ -5,6 +5,13 @@
 [build.environment]
   NODE_VERSION = "20"
 
+# Domain redirect
+[[redirects]]
+  from = "https://toolzy.site/*"
+  to = "https://toolzydev.com/:splat"
+  status = 301
+  force = true
+
 # Trailing slash redirects
 [[redirects]]
   from = "/3d-viewer"

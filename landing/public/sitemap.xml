@@ -1,37 +1,37 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://toolzy.site/</loc>
+    <loc>https://toolzydev.com/</loc>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://toolzy.site/json/</loc>
+    <loc>https://toolzydev.com/json/</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://toolzy.site/3d-viewer/</loc>
+    <loc>https://toolzydev.com/3d-viewer/</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://toolzy.site/encode/</loc>
+    <loc>https://toolzydev.com/encode/</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://toolzy.site/regex/</loc>
+    <loc>https://toolzydev.com/regex/</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://toolzy.site/cron/</loc>
+    <loc>https://toolzydev.com/cron/</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://toolzy.site/nginx/</loc>
+    <loc>https://toolzydev.com/nginx/</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
