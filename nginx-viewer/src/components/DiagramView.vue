@@ -27,6 +27,21 @@
           <span class="leg"><span class="leg-dot" style="background:#f59e0b"></span>HTTPS</span>
           <span class="leg"><span class="leg-dot" style="background:#4ade80"></span>HTTP</span>
           <span class="leg">📁 Static &nbsp;|&nbsp; 📋 include</span>
+          <div class="anim-toggle-wrap">
+            <button
+              class="btn-anim-toggle"
+              :class="{ active: flowAnim }"
+              @click="flowAnim = !flowAnim"
+            >
+              <span class="anim-toggle-dot"></span>
+              흐름 애니메이션
+            </button>
+            <div class="anim-toggle-tooltip">
+              <strong>흐름 애니메이션</strong>
+              <span>ON: 노드/연결선 hover 시 흐름 표시</span>
+              <span>OFF: 애니메이션 없이 정적 표시</span>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -79,6 +94,15 @@
                 :stroke-opacity="connHighlight(conn) === 'dimmed' ? 0.1 : 0.55"
                 :marker-end="`url(#darr-${conn.colorIdx})`"
               />
+              <path
+                v-if="isConnFlowing(conn)"
+                :d="conn.d"
+                fill="none"
+                :stroke="conn.color"
+                stroke-width="3"
+                stroke-opacity="0.65"
+                class="flow-path"
+              />
               <circle :cx="conn.mx" :cy="conn.my" r="11" fill="#16161d" :stroke="conn.color" stroke-width="1.5"
                 :stroke-opacity="connHighlight(conn) === 'dimmed' ? 0.15 : 0.7"/>
               <text
@@ -109,6 +133,15 @@
                 stroke-opacity="0.9"
                 :marker-end="`url(#darr-${conn.colorIdx})`"
               />
+              <path
+                v-if="isConnFlowing(conn)"
+                :d="conn.d"
+                fill="none"
+                :stroke="conn.color"
+                stroke-width="3.5"
+                stroke-opacity="0.8"
+                class="flow-path"
+              />
               <circle :cx="conn.mx" :cy="conn.my" r="11" fill="#16161d" :stroke="conn.color" stroke-width="1.5" stroke-opacity="0.9"/>
               <text
                 :x="conn.mx" :y="conn.my + 4"
@@ -128,6 +161,8 @@
             :class="[{ 'is-ssl': srv.isSSL, 'has-no-conn': !srv.connections.length }, nodeClass(srv)]"
             :style="nodeStyle(srv)"
             @click.stop="selectNode(srv.id)"
+            @mouseenter="hoveredId = srv.id"
+            @mouseleave="hoveredId = null"
           >
             <div class="node-ports">
               <span
@@ -142,7 +177,10 @@
             <div class="node-badges">
               <span v-if="srv.hasStatic"  class="nbadge">📁 static</span>
               <span v-if="srv.hasInclude" class="nbadge">📋 include</span>
-              <span v-if="!srv.connections.length" class="nbadge nbadge-standalone">standalone</span>
+              <span v-if="!srv.connections.length && !srv.serverReturn" class="nbadge nbadge-standalone">standalone</span>
+            </div>
+            <div v-if="srv.serverReturn" class="node-redirect" :title="srv.serverReturn">
+              ↪ {{ srv.serverReturn }}
             </div>
           </div>
 
@@ -150,9 +188,11 @@
           <div
             v-for="bk in layout.backends" :key="bk.id"
             class="dg-node bk-node"
-            :class="nodeClass(bk)"
+            :class="[nodeClass(bk), { 'is-alias': bk.type === 'alias', 'is-upstream': bk.isUpstream }]"
             :style="{ ...nodeStyle(bk), borderLeftColor: bk.color }"
             @click.stop="selectNode(bk.id)"
+            @mouseenter="hoveredId = bk.id"
+            @mouseleave="hoveredId = null"
           >
             <div class="bk-type" :style="{ color: bk.color }">
               <template v-if="bk.type === 'alias'">
@@ -164,13 +204,19 @@
                 {{ bk.isUpstream ? 'upstream' : 'backend' }}
               </template>
             </div>
-            <div class="bk-host">{{ bk.host }}</div>
+            <div
+              class="bk-host"
+              :class="{ 'bk-host-path': bk.type === 'alias' }"
+              :title="bk.type === 'alias' ? bk.host : undefined"
+            >{{ bk.type === 'alias' ? shortenPath(bk.host) : bk.host }}</div>
             <div v-if="bk.isUpstream" class="bk-upstream-toggle" @click.stop="toggleUpstream(bk.id)">
               <span>{{ bk.upstreamServers.length }} servers</span>
               <span class="toggle-icon">{{ expandedUpstreams.has(bk.id) ? '▲' : '▼' }}</span>
             </div>
             <div v-if="bk.isUpstream && expandedUpstreams.has(bk.id)" class="bk-members">
-              <div v-for="s in bk.upstreamServers" :key="s" class="bk-member">{{ s }}</div>
+              <div v-for="s in bk.upstreamServers" :key="s" class="bk-member">
+                <span class="bk-member-bullet">·</span>{{ s }}
+              </div>
             </div>
           </div>
 
@@ -192,6 +238,10 @@
               <div class="dp-ports">
                 <span v-for="p in selectedNode.node.listens" :key="p" class="port-tag" :class="{ ssl: isSslPort(p) }">{{ p }}</span>
               </div>
+            </div>
+            <div v-if="selectedNode.node.serverReturn" class="dp-section">
+              <div class="dp-section-title">Redirect</div>
+              <div class="dp-redirect-val">↪ {{ selectedNode.node.serverReturn }}</div>
             </div>
             <div v-if="selectedNode.node.locations && selectedNode.node.locations.length" class="dp-section">
               <div class="dp-section-title">Locations ({{ selectedNode.node.locations.length }})</div>
@@ -247,7 +297,7 @@
 </template>
 
 <script setup>
-import { ref, computed, reactive } from 'vue'
+import { ref, computed, reactive, watchEffect } from 'vue'
 import { extractDiagramData } from '../utils/nginxDiagram.js'
 import { MODIFIER_LABELS } from '../utils/locationAnalyzer.js'
 
@@ -285,16 +335,18 @@ function isSslPort(p) {
 }
 
 function srvHeight(srv) {
-  const portsH  = 26
-  const namesH  = srv.serverNames.length * 18
-  const badgesH = (srv.hasStatic || srv.hasInclude) ? 20 : 0
-  return Math.max(70, portsH + namesH + badgesH + 16)
+  const portsH    = 26
+  const namesH    = srv.serverNames.length * 18
+  const badgesH   = (srv.hasStatic || srv.hasInclude) ? 20 : 0
+  const redirectH = srv.serverReturn ? 20 : 0
+  return Math.max(70, portsH + namesH + badgesH + redirectH + 16)
 }
 
 function bkHeight(bk) {
   const expanded = expandedUpstreams.has(bk.id)
-  return 60 + (bk.isUpstream && bk.upstreamServers.length && expanded
-    ? bk.upstreamServers.length * 16 + 6
+  const base = bk.isUpstream ? 78 : 60
+  return base + (bk.isUpstream && bk.upstreamServers.length && expanded
+    ? bk.upstreamServers.length * 18 + 9
     : 0)
 }
 
@@ -448,7 +500,10 @@ function resetView() {
 }
 
 // ── Node selection / highlight ──────────────────────────────
-const selectedId = ref(null)
+const selectedId     = ref(null)
+const hoveredId      = ref(null)
+const hoveredConnKey = ref(null)
+const flowAnim       = ref(true)
 
 const highlightState = computed(() => {
   const id = selectedId.value
@@ -512,6 +567,7 @@ const connTooltip = ref(null)
 
 function onConnEnter(conn, event) {
   connTooltip.value = { paths: conn.paths, x: event.clientX + 14, y: event.clientY + 8 }
+  hoveredConnKey.value = `${conn.serverId}-${conn.backendId}`
 }
 function onConnMove(event) {
   if (connTooltip.value) {
@@ -520,6 +576,7 @@ function onConnMove(event) {
 }
 function onConnLeave() {
   connTooltip.value = null
+  hoveredConnKey.value = null
 }
 
 // ── Upstream toggle ──────────────────────────────────────────
@@ -527,6 +584,29 @@ const expandedUpstreams = reactive(new Set())
 
 function toggleUpstream(id) {
   expandedUpstreams.has(id) ? expandedUpstreams.delete(id) : expandedUpstreams.add(id)
+}
+
+// ── Auto-expand upstreams on data change ─────────────────────
+watchEffect(() => {
+  for (const bk of data.value.backends) {
+    if (bk.isUpstream) expandedUpstreams.add(bk.id)
+  }
+})
+
+// ── Path display helper ──────────────────────────────────────
+function shortenPath(p) {
+  const parts = p.replace(/\/$/, '').split('/').filter(Boolean)
+  return parts.length > 2 ? '…/' + parts.slice(-2).join('/') : p
+}
+
+// ── Connection flow animation helper ────────────────────────
+function isConnFlowing(conn) {
+  if (!flowAnim.value) return false
+  const key = `${conn.serverId}-${conn.backendId}`
+  if (hoveredConnKey.value === key) return true
+  const hid = hoveredId.value
+  if (!hid) return false
+  return conn.serverId === hid || conn.backendId === hid
 }
 
 // ── Location modifier helpers ────────────────────────────────
@@ -757,9 +837,27 @@ function modInfo(modifier) {
   color: #6b7280;
 }
 
+.node-redirect {
+  font-size: 10px;
+  font-family: 'JetBrains Mono', monospace;
+  color: #a5b4fc;
+  background: rgba(99, 102, 241, 0.1);
+  border: 1px solid rgba(99, 102, 241, 0.25);
+  border-radius: 4px;
+  padding: 2px 6px;
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 /* Backend node */
 .bk-node {
   border-left: 3px solid;
+}
+
+.bk-node.is-alias {
+  border-left-style: dashed;
 }
 
 .bk-type {
@@ -779,6 +877,13 @@ function modInfo(modifier) {
   word-break: break-all;
 }
 
+.bk-host-path {
+  word-break: normal;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .bk-members {
   display: flex;
   flex-direction: column;
@@ -789,9 +894,19 @@ function modInfo(modifier) {
 }
 
 .bk-member {
+  display: flex;
+  align-items: center;
+  gap: 5px;
   font-size: 11px;
   font-family: 'JetBrains Mono', monospace;
-  color: #6b7280;
+  color: #9ca3af;
+}
+
+.bk-member-bullet {
+  color: #4b5563;
+  font-size: 16px;
+  line-height: 1;
+  flex-shrink: 0;
 }
 
 /* Detail panel */
@@ -998,6 +1113,92 @@ function modInfo(modifier) {
 .mod-regex_ci        { background: rgba(250,204,21,0.07); color: #fde047; border: 1px solid rgba(250,204,21,0.2); }
 .mod-prefix          { background: rgba(96,165,250,0.1);  color: #60a5fa; border: 1px solid rgba(96,165,250,0.2); }
 .mod-named           { background: rgba(107,114,128,0.1); color: #9ca3af; border: 1px solid rgba(107,114,128,0.2); }
+
+.dp-redirect-val {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  color: #a5b4fc;
+  background: rgba(99, 102, 241, 0.1);
+  border: 1px solid rgba(99, 102, 241, 0.25);
+  border-radius: 5px;
+  padding: 4px 8px;
+}
+
+/* Hover flow animation */
+@keyframes flow-dash {
+  to { stroke-dashoffset: -32; }
+}
+
+.flow-path {
+  stroke-dasharray: 12 20;
+  stroke-dashoffset: 0;
+  animation: flow-dash 0.7s linear infinite;
+  will-change: stroke-dashoffset;
+}
+
+/* Animation toggle button */
+.anim-toggle-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.btn-anim-toggle {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: #1e293b;
+  color: #6b7280;
+  border: 1px solid #2a2a3a;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 8px;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+}
+.btn-anim-toggle:hover { background: #2a2a3a; color: #9ca3af; }
+.btn-anim-toggle.active { color: #4ade80; border-color: rgba(74,222,128,0.4); background: rgba(74,222,128,0.06); }
+
+.anim-toggle-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #4b5563;
+  transition: background 0.15s;
+  flex-shrink: 0;
+}
+.btn-anim-toggle.active .anim-toggle-dot { background: #4ade80; }
+
+.anim-toggle-tooltip {
+  display: none;
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  background: #1c1c26;
+  border: 1px solid #3a3a4f;
+  border-radius: 8px;
+  padding: 10px 13px;
+  width: 220px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+  pointer-events: none;
+  z-index: 200;
+  flex-direction: column;
+  gap: 5px;
+}
+.anim-toggle-tooltip strong {
+  font-size: 11px;
+  font-weight: 700;
+  color: #d1d5db;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.anim-toggle-tooltip span {
+  font-size: 11px;
+  color: #6b7280;
+  line-height: 1.5;
+}
+.anim-toggle-wrap:hover .anim-toggle-tooltip { display: flex; }
 </style>
 
 <style>

@@ -30,12 +30,12 @@ toolzy/
 ├── netlify.toml            ← 통합 배포 설정
 ├── scripts/
 │   └── merge-dist.js       ← 빌드 결과물 병합
-├── landing/                ← toolzy.site/
-├── json-formatter/         ← toolzy.site/json/
-├── 3d-viewer/              ← toolzy.site/3d-viewer/
-├── base64-encoder/         ← toolzy.site/encode/
-├── regex-tester/           ← toolzy.site/regex/
-└── cron-tester/            ← toolzy.site/cron/
+├── landing/                ← toolzydev.com/
+├── json-formatter/         ← toolzydev.com/json/
+├── 3d-viewer/              ← toolzydev.com/3d-viewer/
+├── base64-encoder/         ← toolzydev.com/encode/
+├── regex-tester/           ← toolzydev.com/regex/
+└── cron-tester/            ← toolzydev.com/cron/
 ```
 
 **npm workspaces** — `package.json` 루트의 `workspaces` 배열에 앱 폴더명 등록. vue, vite, @vitejs/plugin-vue는 루트에서 공유.
@@ -185,7 +185,7 @@ onMounted(() => {
       <h1 class="title">앱 이름</h1>
       <p class="message">이 서비스는 PC 환경에서<br>최적화되어 있습니다.</p>
       <p class="submessage">데스크탑 또는 노트북 브라우저에서<br>접속해 주세요.</p>
-      <div class="url-badge">toolzy.site/경로/</div>
+      <div class="url-badge">toolzydev.com/경로/</div>
     </div>
   </div>
 </template>
@@ -473,7 +473,7 @@ const screenshots = {
 </a>
 ```
 
-> 카드에 URL 표기(`toolzy.site/my-tool/`)는 넣지 않는다. (2025-03-18 제거됨)
+> 카드에 URL 표기(`toolzydev.com/my-tool/`)는 넣지 않는다. (2025-03-18 제거됨)
 
 ### 3) 푸터 링크 추가
 

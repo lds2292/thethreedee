@@ -7,14 +7,14 @@
           <polyline points="8 21 12 17 16 21"/>
         </svg>
       </div>
-      <h1 class="title">Toolzy</h1>
+      <h1 class="title">toolzydev</h1>
       <p class="message">
         이 사이트는 PC 환경에서<br>최적화되어 있습니다.
       </p>
       <p class="submessage">
         데스크탑 또는 노트북 브라우저에서<br>접속해 주세요.
       </p>
-      <div class="url-badge">toolzy.site</div>
+      <div class="url-badge">toolzydev.com</div>
     </div>
   </div>
 </template>

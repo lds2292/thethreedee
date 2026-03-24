@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://json.toolzy.site/sitemap.xml
+Sitemap: https://toolzydev.com/json/sitemap.xml

@@ -10,11 +10,24 @@
             <polyline points="16 18 22 12 16 6"/>
             <polyline points="8 6 2 12 8 18"/>
           </svg>
-          <span class="logo-text">Toolzy</span>
+          <span class="logo-text">toolzydev</span>
         </div>
         <span class="tagline">Developer Tools, Simplified</span>
       </div>
     </header>
+
+    <!-- Category Nav -->
+    <nav class="cat-nav">
+      <div class="cat-nav-inner">
+        <button
+          v-for="item in navItems"
+          :key="item.id"
+          class="cat-btn"
+          :class="{ active: activeCategory === item.id }"
+          @click="activeCategory = item.id"
+        >{{ item.label }}</button>
+      </div>
+    </nav>
 
     <!-- Hero -->
     <section class="hero">
@@ -24,146 +37,30 @@
 
     <!-- Tool Cards -->
     <section class="tools">
-      <div class="cards">
-        <a class="card" href="/json/">
-          <div class="card-bg">
-            <img :src="screenshots.jsonFormatter" alt="JSON Formatter preview" loading="lazy" />
-          </div>
-          <div class="card-icon">
-            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="16 18 22 12 16 6"/>
-              <polyline points="8 6 2 12 8 18"/>
-            </svg>
-          </div>
-          <div class="card-body">
-            <h2 class="card-title">JSON Formatter</h2>
-            <p class="card-desc">Format · Validate · Minify · Convert</p>
-            <p class="card-detail">JSON을 보기 좋게 포맷하고 문법 오류를 실시간으로 검증합니다. 트리 뷰, 키 정렬, CSV·TypeScript 변환까지 하나의 도구로.</p>
-          </div>
-          <div class="card-arrow">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <line x1="5" y1="12" x2="19" y2="12"/>
-              <polyline points="12 5 19 12 12 19"/>
-            </svg>
-          </div>
-        </a>
-
-        <a class="card" href="/3d-viewer/">
-          <div class="card-bg">
-            <img :src="screenshots.viewer3d" alt="3D Viewer preview" loading="lazy" />
-          </div>
-          <div class="card-icon">
-            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
-              <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
-              <line x1="12" y1="22.08" x2="12" y2="12"/>
-            </svg>
-          </div>
-          <div class="card-body">
-            <h2 class="card-title">3D Viewer</h2>
-            <p class="card-desc">STL · OBJ · GLTF · GLB</p>
-            <p class="card-detail">STL, OBJ, GLTF, GLB 파일을 브라우저에서 바로 렌더링합니다. 회전·확대·조명 조절과 와이어프레임 모드, 스크린샷 저장 지원.</p>
-          </div>
-          <div class="card-arrow">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <line x1="5" y1="12" x2="19" y2="12"/>
-              <polyline points="12 5 19 12 12 19"/>
-            </svg>
-          </div>
-        </a>
-
-        <a class="card" href="/encode/">
-          <div class="card-bg">
-            <img :src="screenshots.base64Encoder" alt="Base64 Encoder preview" loading="lazy" />
-          </div>
-          <div class="card-icon">
-            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-              <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-            </svg>
-          </div>
-          <div class="card-body">
-            <h2 class="card-title">Base64 Encoder</h2>
-            <p class="card-desc">Base64 · URL · Image → Base64</p>
-            <p class="card-detail">텍스트·URL·이미지를 Base64로 인코딩하거나 디코딩합니다. Standard, Base64url, MIME 등 다양한 Variant와 한글을 포함한 UTF-8 완전 지원.</p>
-          </div>
-          <div class="card-arrow">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <line x1="5" y1="12" x2="19" y2="12"/>
-              <polyline points="12 5 19 12 12 19"/>
-            </svg>
-          </div>
-        </a>
-
-        <a class="card" href="/regex/">
-          <div class="card-bg">
-            <img v-if="screenshots.regexTester" :src="screenshots.regexTester" alt="Regex Tester preview" loading="lazy" />
-          </div>
-          <div class="card-icon">
-            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="16 18 22 12 16 6"/>
-              <polyline points="8 6 2 12 8 18"/>
-              <line x1="12" y1="4" x2="10" y2="20"/>
-            </svg>
-          </div>
-          <div class="card-body">
-            <h2 class="card-title">Regex Tester</h2>
-            <p class="card-desc">Test · Match · Replace</p>
-            <p class="card-detail">정규식을 실시간으로 테스트하고 매칭을 하이라이트로 시각화합니다. 캡처 그룹, 플래그 토글, Replace All, 자주 쓰는 패턴 모음 제공.</p>
-          </div>
-          <div class="card-arrow">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <line x1="5" y1="12" x2="19" y2="12"/>
-              <polyline points="12 5 19 12 12 19"/>
-            </svg>
-          </div>
-        </a>
-
-        <a class="card" href="/cron/">
-          <div class="card-bg">
-            <img v-if="screenshots.cronTester" :src="screenshots.cronTester" alt="Cron Tester preview" loading="lazy" />
-          </div>
-          <div class="card-icon">
-            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="12" cy="12" r="10"/>
-              <polyline points="12 6 12 12 16 14"/>
-            </svg>
-          </div>
-          <div class="card-body">
-            <h2 class="card-title">Cron Tester</h2>
-            <p class="card-desc">Validate · Describe · Preview</p>
-            <p class="card-detail">cron 표현식을 실시간으로 검증하고 한국어 설명을 제공합니다. 다음 실행 시간 10개 미리보기, 5-field/6-field 포맷 전환, 자주 쓰는 프리셋 제공.</p>
-          </div>
-          <div class="card-arrow">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <line x1="5" y1="12" x2="19" y2="12"/>
-              <polyline points="12 5 19 12 12 19"/>
-            </svg>
-          </div>
-        </a>
-
-        <a class="card" href="/nginx/">
-          <div class="card-bg">
-            <img v-if="screenshots.nginxViewer" :src="screenshots.nginxViewer" alt="nginx Viewer preview" loading="lazy" />
-          </div>
-          <div class="card-icon">
-            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="16 18 22 12 16 6"/>
-              <polyline points="8 6 2 12 8 18"/>
-            </svg>
-          </div>
-          <div class="card-body">
-            <h2 class="card-title">nginx Viewer</h2>
-            <p class="card-desc">Parse · Format · Tree · Summary</p>
-            <p class="card-detail">nginx.conf를 붙여넣으면 자동 포매팅, 트리 탐색, 핵심 설정 요약을 제공합니다. Virtual host, upstream, location, SSL 인증서 정보를 한눈에 확인.</p>
-          </div>
-          <div class="card-arrow">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <line x1="5" y1="12" x2="19" y2="12"/>
-              <polyline points="12 5 19 12 12 19"/>
-            </svg>
-          </div>
-        </a>
+      <div v-for="cat in filteredCategories" :key="cat.id" class="category-section">
+        <div class="category-header">
+          <span class="category-label">{{ cat.label }}</span>
+          <span class="category-label-en">{{ cat.en }}</span>
+        </div>
+        <div class="cards">
+          <a v-for="tool in cat.tools" :key="tool.key" class="card" :href="tool.href">
+            <div class="card-bg">
+              <img v-if="screenshots[tool.key]" :src="screenshots[tool.key]" :alt="tool.title + ' preview'" loading="lazy" />
+            </div>
+            <div class="card-icon" v-html="tool.icon"></div>
+            <div class="card-body">
+              <h2 class="card-title">{{ tool.title }}</h2>
+              <p class="card-desc">{{ tool.desc }}</p>
+              <p class="card-detail">{{ tool.detail }}</p>
+            </div>
+            <div class="card-arrow">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="5" y1="12" x2="19" y2="12"/>
+                <polyline points="12 5 19 12 12 19"/>
+              </svg>
+            </div>
+          </a>
+        </div>
       </div>
     </section>
 
@@ -179,7 +76,7 @@
 
     <!-- Footer -->
     <footer class="footer">
-      <span>© 2025 Toolzy</span>
+      <span>© 2025 toolzydev</span>
       <span class="sep">·</span>
       <a href="/json/">JSON Formatter</a>
       <span class="sep">·</span>
@@ -197,12 +94,13 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import MobileBlock from './components/MobileBlock.vue'
 import NotFound from './components/NotFound.vue'
 
 const isMobile = ref(false)
 const isNotFound = ref(false)
+const activeCategory = ref('all')
 
 const screenshots = {
   jsonFormatter: '/screenshots/json-formatter.jpg',
@@ -212,6 +110,70 @@ const screenshots = {
   cronTester: '/screenshots/cron-tester.jpg',
   nginxViewer: '/screenshots/nginx-viewer.jpg',
 }
+
+const categories = [
+  {
+    id: 'dev-tools',
+    label: '개발자 도구',
+    en: 'Developer Tools',
+    tools: [
+      {
+        key: 'jsonFormatter', href: '/json/',
+        title: 'JSON Formatter', desc: 'Format · Validate · Minify · Convert',
+        detail: 'JSON을 보기 좋게 포맷하고 문법 오류를 실시간으로 검증합니다. 트리 뷰, 키 정렬, CSV·TypeScript 변환까지 하나의 도구로.',
+        icon: '<svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>',
+      },
+      {
+        key: 'regexTester', href: '/regex/',
+        title: 'Regex Tester', desc: 'Test · Match · Replace',
+        detail: '정규식을 실시간으로 테스트하고 매칭을 하이라이트로 시각화합니다. 캡처 그룹, 플래그 토글, Replace All, 자주 쓰는 패턴 모음 제공.',
+        icon: '<svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/><line x1="12" y1="4" x2="10" y2="20"/></svg>',
+      },
+      {
+        key: 'base64Encoder', href: '/encode/',
+        title: 'Base64 Encoder', desc: 'Base64 · URL · Image → Base64',
+        detail: '텍스트·URL·이미지를 Base64로 인코딩하거나 디코딩합니다. Standard, Base64url, MIME 등 다양한 Variant와 한글을 포함한 UTF-8 완전 지원.',
+        icon: '<svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>',
+      },
+      {
+        key: 'cronTester', href: '/cron/',
+        title: 'Cron Tester', desc: 'Validate · Describe · Preview',
+        detail: 'cron 표현식을 실시간으로 검증하고 한국어 설명을 제공합니다. 다음 실행 시간 10개 미리보기, 5-field/6-field 포맷 전환, 자주 쓰는 프리셋 제공.',
+        icon: '<svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>',
+      },
+      {
+        key: 'nginxViewer', href: '/nginx/',
+        title: 'nginx Viewer', desc: 'Parse · Format · Tree · Summary',
+        detail: 'nginx.conf를 붙여넣으면 자동 포매팅, 트리 탐색, 핵심 설정 요약을 제공합니다. Virtual host, upstream, location, SSL 인증서 정보를 한눈에 확인.',
+        icon: '<svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>',
+      },
+    ],
+  },
+  {
+    id: 'media',
+    label: '3D / 미디어',
+    en: '3D & Media',
+    tools: [
+      {
+        key: 'viewer3d', href: '/3d-viewer/',
+        title: '3D Viewer', desc: 'STL · OBJ · GLTF · GLB',
+        detail: 'STL, OBJ, GLTF, GLB 파일을 브라우저에서 바로 렌더링합니다. 회전·확대·조명 조절과 와이어프레임 모드, 스크린샷 저장 지원.',
+        icon: '<svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>',
+      },
+    ],
+  },
+]
+
+const navItems = [
+  { id: 'all', label: 'All' },
+  ...categories.map(cat => ({ id: cat.id, label: cat.label })),
+]
+
+const filteredCategories = computed(() =>
+  activeCategory.value === 'all'
+    ? categories
+    : categories.filter(cat => cat.id === activeCategory.value)
+)
 
 onMounted(() => {
   const path = window.location.pathname.replace(/\/+$/, '') || '/'
@@ -282,6 +244,49 @@ onMounted(() => {
   margin-left: 4px;
 }
 
+/* Category Nav */
+.cat-nav {
+  position: sticky;
+  top: 56px;
+  z-index: 9;
+  background: #0f0f13;
+  border-bottom: 1px solid #2a2a3a;
+  padding: 0 32px;
+}
+
+.cat-nav-inner {
+  max-width: 960px;
+  width: 100%;
+  margin: 0 auto;
+  display: flex;
+  gap: 4px;
+  padding: 10px 0;
+}
+
+.cat-btn {
+  padding: 6px 16px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 20px;
+  color: #6b7280;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: color 0.15s, background 0.15s, border-color 0.15s;
+  white-space: nowrap;
+}
+
+.cat-btn:hover {
+  color: #f0f0f5;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.cat-btn.active {
+  color: #a78bfa;
+  background: rgba(167, 139, 250, 0.12);
+  border-color: rgba(167, 139, 250, 0.3);
+}
+
 /* Hero */
 .hero {
   max-width: 960px;
@@ -316,6 +321,34 @@ onMounted(() => {
   width: 100%;
   margin: 56px auto 0;
   padding: 0 32px;
+}
+
+.category-section {
+  margin-bottom: 48px;
+}
+
+.category-section:last-child {
+  margin-bottom: 0;
+}
+
+.category-header {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 20px;
+  padding-left: 12px;
+  border-left: 3px solid #a78bfa;
+}
+
+.category-label {
+  font-size: 15px;
+  font-weight: 700;
+  color: #f0f0f5;
+}
+
+.category-label-en {
+  font-size: 12px;
+  color: #6b7280;
 }
 
 .cards {

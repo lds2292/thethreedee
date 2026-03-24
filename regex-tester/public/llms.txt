@@ -1,6 +1,6 @@
 # Regex Tester
 
-> Free online regular expression tester at https://regex.toolzy.site
+> Free online regular expression tester at https://toolzydev.com/regex
 
 ## What it does
 
@@ -21,4 +21,4 @@ Software developers and anyone working with text processing who needs to quickly
 
 ## URL
 
-https://regex.toolzy.site
+https://toolzydev.com/regex

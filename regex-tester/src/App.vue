@@ -835,8 +835,8 @@ function copyToClipboard(text, key) {
 
 // ── Sample text ───────────────────────────────────────────────────────────────
 function loadSample() {
-  testString.value = `Contact us at support@toolzy.site or hello@example.com.
-Visit https://toolzy.site or http://example.org/path?q=1 for more info.
+  testString.value = `Contact us at support@toolzydev.com or hello@example.com.
+Visit https://toolzydev.com or http://example.org/path?q=1 for more info.
 Phone: 010-1234-5678 or 010-9876-5432
 IP: 192.168.0.1, 10.0.0.255, 255.255.255.0
 Date: 2024-03-15, 2023-12-01

@@ -14,7 +14,7 @@
       <p class="submessage">
         데스크탑 또는 노트북 브라우저에서<br>접속해 주세요.
       </p>
-      <div class="url-badge">cron.toolzy.site</div>
+      <div class="url-badge">toolzydev.com/cron</div>
     </div>
   </div>
 </template>

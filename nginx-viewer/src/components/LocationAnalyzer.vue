@@ -76,16 +76,27 @@
       <div class="server-header" @click="toggleServer(si)">
         <span class="expand-icon">{{ expandedServers[si] ? '▾' : '▸' }}</span>
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-        <span class="server-name">{{ srv.serverNames.join(', ') || '(unnamed)' }}</span>
+        <span
+          class="server-name"
+          :class="{ 'server-name-jumpable': srv.line }"
+          :title="srv.line ? `줄 ${srv.line}로 이동` : ''"
+          @click.stop="doJump(srv, srv.line)"
+        >{{ srv.serverNames.join(', ') || '(unnamed)' }}</span>
         <span v-if="srv.listens.length" class="server-listen">{{ srv.listens.join(', ') }}</span>
         <span class="loc-count-badge">
           {{ searchQuery ? `${filteredLocs[si]?.length ?? 0} / ` : '' }}{{ srv.locations.length }} locations
         </span>
+        <span v-if="srv.fromInclude" class="from-include-badge">📎 from include</span>
       </div>
 
       <template v-if="expandedServers[si]">
         <!-- Location list -->
-        <div v-if="srv.locations.length === 0" class="no-locations">location 블록이 없습니다.</div>
+        <div v-if="srv.locations.length === 0" class="no-locations">
+          <template v-if="srv.serverReturn">
+            <span class="redirect-badge">↪ {{ srv.serverReturn }}</span>
+          </template>
+          <template v-else>location 블록이 없습니다.</template>
+        </div>
         <div v-else class="location-list">
           <div
             v-for="(loc, li) in annotated[si]"
@@ -97,7 +108,7 @@
               'has-line': loc.node?.line,
               'loc-expanded': expandedLocs[`${si}-${li}`],
             }"
-            @click="jumpToLine && loc.node?.line && jumpToLine(loc.node.line)"
+            @click="doJump(srv, loc.node?.line)"
           >
             <div class="loc-main">
               <!-- Modifier badge -->
@@ -132,7 +143,10 @@
               <button
                 v-if="deleteNode && loc.node"
                 class="loc-delete-btn"
-                @click.stop="confirmDelete(loc.node, loc.path)"
+                :class="{ 'is-disabled': srv.fromInclude }"
+                :title="srv.fromInclude ? 'include 파일은 삭제할 수 없습니다' : ''"
+                :disabled="srv.fromInclude"
+                @click.stop="!srv.fromInclude && confirmDelete(loc.node, loc.path)"
               >삭제</button>
             </div>
             <div class="loc-meta">
@@ -215,6 +229,12 @@ const props = defineProps({
 
 const jumpToLine = inject('jumpToLine', null)
 const deleteNode = inject('deleteNode', null)
+
+function doJump(srv, line) {
+  if (!line) return
+  if (jumpToLine && !srv.fromInclude) jumpToLine(line)
+}
+
 const deleteTarget = ref(null)
 
 function confirmDelete(node, path) {
@@ -512,7 +532,46 @@ function modInfo(modifier) {
 .server-name {
   font-family: monospace;
   font-weight: 700;
-  color: #a78bfa;
+  color: #4ade80;
+}
+
+.server-name-jumpable {
+  cursor: pointer;
+  text-decoration: underline;
+  text-decoration-color: rgba(74, 222, 128, 0.4);
+  text-underline-offset: 3px;
+}
+
+.server-name-jumpable:hover {
+  color: #86efac;
+  text-decoration-color: rgba(134, 239, 172, 0.7);
+}
+
+.from-include-badge {
+  background: rgba(245, 158, 11, 0.1);
+  color: #f59e0b;
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  border-radius: 10px;
+  padding: 1px 8px;
+  font-size: 10px;
+  font-weight: 600;
+  flex-shrink: 0;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.redirect-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(99, 102, 241, 0.1);
+  color: #a5b4fc;
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  border-radius: 6px;
+  padding: 3px 10px;
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-size: 12px;
+  font-weight: 500;
 }
 
 .server-listen {
@@ -523,9 +582,9 @@ function modInfo(modifier) {
 
 .loc-count-badge {
   margin-left: auto;
-  background: rgba(167, 139, 250, 0.1);
-  color: #7c3aed;
-  border: 1px solid rgba(167, 139, 250, 0.2);
+  background: rgba(74, 222, 128, 0.1);
+  color: #16a34a;
+  border: 1px solid rgba(74, 222, 128, 0.2);
   border-radius: 10px;
   padding: 1px 8px;
   font-size: 10px;
@@ -568,10 +627,10 @@ function modInfo(modifier) {
   transition: border-color 0.15s;
 }
 
-.match-input:focus { border-color: #a78bfa; }
+.match-input:focus { border-color: #4ade80; }
 
 .btn-test {
-  background: #7c3aed;
+  background: #16a34a;
   color: #fff;
   border: none;
   border-radius: 5px;
@@ -582,7 +641,7 @@ function modInfo(modifier) {
   flex-shrink: 0;
   transition: background 0.15s;
 }
-.btn-test:hover { background: #6d28d9; }
+.btn-test:hover { background: #15803d; }
 
 .btn-clear {
   background: none;
@@ -717,9 +776,9 @@ function modInfo(modifier) {
 .loc-expand-btn {
   margin-left: auto;
   background: none;
-  border: 1px solid rgba(167,139,250,0.25);
+  border: 1px solid rgba(74,222,128,0.25);
   border-radius: 4px;
-  color: #a78bfa;
+  color: #4ade80;
   font-size: 11px;
   font-weight: 600;
   padding: 1px 8px;
@@ -730,9 +789,9 @@ function modInfo(modifier) {
 }
 .loc-expand-btn:hover,
 .loc-expand-btn.active {
-  color: #c4b5fd;
-  border-color: rgba(167,139,250,0.5);
-  background: rgba(167,139,250,0.1);
+  color: #86efac;
+  border-color: rgba(74,222,128,0.5);
+  background: rgba(74,222,128,0.1);
 }
 
 /* Delete button */
@@ -749,10 +808,17 @@ function modInfo(modifier) {
   transition: color 0.1s, border-color 0.1s, background 0.1s;
   line-height: 1.6;
 }
-.loc-delete-btn:hover {
+.loc-delete-btn:hover:not(.is-disabled) {
   color: #fca5a5;
   border-color: rgba(248, 113, 113, 0.5);
   background: rgba(248, 113, 113, 0.1);
+}
+
+.loc-delete-btn.is-disabled {
+  color: #374151;
+  border-color: rgba(55, 65, 81, 0.4);
+  cursor: not-allowed;
+  opacity: 0.5;
 }
 
 /* Inline detail */

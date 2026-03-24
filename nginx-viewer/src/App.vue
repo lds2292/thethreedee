@@ -9,7 +9,7 @@
             <polyline points="16 18 22 12 16 6"/>
             <polyline points="8 6 2 12 8 18"/>
           </svg>
-          <span class="logo-text">Toolzy</span>
+          <span class="logo-text">toolzydev</span>
         </a>
         <span class="header-sep">/</span>
         <span class="header-title">nginx Configuration Viewer</span>

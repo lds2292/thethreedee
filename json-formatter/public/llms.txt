@@ -1,7 +1,7 @@
 # JSON Formatter
 > Free online JSON formatter, validator, minifier, and converter for developers.
 
-JSON Formatter is a browser-based developer tool available at https://json.toolzy.site.
+JSON Formatter is a browser-based developer tool available at https://toolzydev.com/json.
 No installation or login required. All processing happens in the browser.
 
 ## Features
@@ -26,4 +26,4 @@ No installation or login required. All processing happens in the browser.
 - Exploring deeply nested JSON structures visually
 
 ## URL
-https://json.toolzy.site
+https://toolzydev.com/json

@@ -2,10 +2,10 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
         xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
-    <loc>https://json.toolzy.site/</loc>
-    <xhtml:link rel="alternate" hreflang="ko" href="https://json.toolzy.site/"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://json.toolzy.site/"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://json.toolzy.site/"/>
+    <loc>https://toolzydev.com/json/</loc>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://toolzydev.com/json/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://toolzydev.com/json/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://toolzydev.com/json/"/>
     <lastmod>2026-03-17</lastmod>
     <changefreq>monthly</changefreq>
     <priority>1.0</priority>

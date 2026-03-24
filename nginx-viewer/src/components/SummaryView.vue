@@ -8,12 +8,75 @@
       </div>
       <div class="card-body">
         <div v-if="summary.worker.processes" class="row">
-          <span class="key">worker_processes</span>
+          <span
+            class="key"
+            :class="{ 'key-has-doc': DIRECTIVE_DOCS['worker_processes'] }"
+            @mouseenter="showTooltip('worker_processes', $event)"
+            @mouseleave="hideTooltip"
+          >worker_processes</span>
           <span class="val">{{ summary.worker.processes }}</span>
+        </div>
+        <div v-if="summary.worker.rlimitNofile" class="row">
+          <span
+            class="key"
+            :class="{ 'key-has-doc': DIRECTIVE_DOCS['worker_rlimit_nofile'] }"
+            @mouseenter="showTooltip('worker_rlimit_nofile', $event)"
+            @mouseleave="hideTooltip"
+          >worker_rlimit_nofile</span>
+          <span class="val">{{ summary.worker.rlimitNofile }}</span>
         </div>
         <div v-if="summary.worker.connections" class="row">
           <span class="key">worker_connections</span>
           <span class="val">{{ summary.worker.connections }}</span>
+        </div>
+        <div v-if="summary.worker.eventModel" class="row">
+          <span
+            class="key"
+            :class="{ 'key-has-doc': DIRECTIVE_DOCS['use'] }"
+            @mouseenter="showTooltip('use', $event)"
+            @mouseleave="hideTooltip"
+          >use</span>
+          <span class="val">{{ summary.worker.eventModel }}</span>
+        </div>
+        <div v-if="summary.worker.multiAccept" class="row">
+          <span
+            class="key"
+            :class="{ 'key-has-doc': DIRECTIVE_DOCS['multi_accept'] }"
+            @mouseenter="showTooltip('multi_accept', $event)"
+            @mouseleave="hideTooltip"
+          >multi_accept</span>
+          <span class="val" :class="summary.worker.multiAccept === 'on' ? 'val-on' : 'val-off'">{{ summary.worker.multiAccept }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- HTTP Global -->
+    <div v-if="hasHttpGlobal" class="card">
+      <div class="card-title">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+        HTTP 전역 설정
+      </div>
+      <div class="card-body">
+        <template v-if="summary.httpIncludes && summary.httpIncludes.length">
+          <div v-for="(pattern, pi) in summary.httpIncludes" :key="'inc'+pi" class="row">
+            <span
+              class="key"
+              :class="{ 'key-has-doc': DIRECTIVE_DOCS['include'] }"
+              @mouseenter="showTooltip('include', $event)"
+              @mouseleave="hideTooltip"
+            >include</span>
+            <span class="val mono val-include">{{ pattern }}</span>
+          </div>
+          <div v-if="Object.keys(summary.httpGlobal).length" class="details-divider"></div>
+        </template>
+        <div v-for="(val, name) in summary.httpGlobal" :key="name" class="row">
+          <span
+            class="key"
+            :class="{ 'key-has-doc': DIRECTIVE_DOCS[name] }"
+            @mouseenter="showTooltip(name, $event)"
+            @mouseleave="hideTooltip"
+          >{{ name }}</span>
+          <span class="val mono" :class="onOffClass(name, val)">{{ val }}</span>
         </div>
       </div>
     </div>
@@ -26,8 +89,157 @@
       </div>
       <div class="card-body">
         <div class="row">
-          <span class="key">gzip</span>
+          <span
+            class="key"
+            :class="{ 'key-has-doc': DIRECTIVE_DOCS['gzip'] }"
+            @mouseenter="showTooltip('gzip', $event)"
+            @mouseleave="hideTooltip"
+          >gzip</span>
           <span class="val" :class="summary.gzip === 'on' ? 'val-on' : 'val-off'">{{ summary.gzip }}</span>
+        </div>
+        <template v-if="Object.keys(summary.gzipDetails).length">
+          <div class="details-divider"></div>
+          <div v-for="(val, name) in summary.gzipDetails" :key="name" class="row">
+            <span
+              class="key"
+              :class="{ 'key-has-doc': DIRECTIVE_DOCS[name] }"
+              @mouseenter="showTooltip(name, $event)"
+              @mouseleave="hideTooltip"
+            >{{ name }}</span>
+            <span class="val mono">{{ val }}</span>
+          </div>
+        </template>
+      </div>
+    </div>
+
+    <!-- Rate Limiting -->
+    <div v-if="hasRateLimiting" class="card">
+      <div class="card-title">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        Rate Limiting
+      </div>
+      <div class="card-body">
+        <template v-if="summary.rateLimiting.reqZones.length">
+          <div class="details-label">
+            <span
+              class="key-has-doc"
+              @mouseenter="showTooltip('limit_req_zone', $event)"
+              @mouseleave="hideTooltip"
+            >limit_req_zone</span>
+          </div>
+          <div v-for="(zone, i) in summary.rateLimiting.reqZones" :key="'rq'+i" class="row sub">
+            <span class="val mono val-zone">{{ zone }}</span>
+          </div>
+        </template>
+        <template v-if="summary.rateLimiting.connZones.length">
+          <div v-if="summary.rateLimiting.reqZones.length" class="details-divider"></div>
+          <div class="details-label">
+            <span
+              class="key-has-doc"
+              @mouseenter="showTooltip('limit_conn_zone', $event)"
+              @mouseleave="hideTooltip"
+            >limit_conn_zone</span>
+          </div>
+          <div v-for="(zone, i) in summary.rateLimiting.connZones" :key="'cc'+i" class="row sub">
+            <span class="val mono val-zone">{{ zone }}</span>
+          </div>
+        </template>
+      </div>
+    </div>
+
+    <!-- Proxy Cache -->
+    <div v-if="hasCache" class="card">
+      <div class="card-title">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+        Proxy Cache
+      </div>
+      <div class="card-body">
+        <div v-if="summary.cache.path" class="row">
+          <span
+            class="key"
+            :class="{ 'key-has-doc': DIRECTIVE_DOCS['proxy_cache_path'] }"
+            @mouseenter="showTooltip('proxy_cache_path', $event)"
+            @mouseleave="hideTooltip"
+          >proxy_cache_path</span>
+          <span class="val mono">{{ summary.cache.path }}</span>
+        </div>
+        <div v-if="summary.cache.key" class="row">
+          <span
+            class="key"
+            :class="{ 'key-has-doc': DIRECTIVE_DOCS['proxy_cache_key'] }"
+            @mouseenter="showTooltip('proxy_cache_key', $event)"
+            @mouseleave="hideTooltip"
+          >proxy_cache_key</span>
+          <span class="val mono">{{ summary.cache.key }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Logging -->
+    <div v-if="hasLogging" class="card">
+      <div class="card-title">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+        로그 설정
+      </div>
+      <div class="card-body">
+        <div v-if="summary.logging.formats.length" class="row">
+          <span
+            class="key"
+            :class="{ 'key-has-doc': DIRECTIVE_DOCS['log_format'] }"
+            @mouseenter="showTooltip('log_format', $event)"
+            @mouseleave="hideTooltip"
+          >log_format</span>
+          <span class="val mono">{{ summary.logging.formats.join(', ') }}</span>
+        </div>
+        <div v-if="summary.logging.accessLog" class="row">
+          <span
+            class="key"
+            :class="{ 'key-has-doc': DIRECTIVE_DOCS['access_log'] }"
+            @mouseenter="showTooltip('access_log', $event)"
+            @mouseleave="hideTooltip"
+          >access_log</span>
+          <span class="val mono">{{ summary.logging.accessLog }}</span>
+        </div>
+        <div v-if="summary.logging.errorLog" class="row">
+          <span
+            class="key"
+            :class="{ 'key-has-doc': DIRECTIVE_DOCS['error_log'] }"
+            @mouseenter="showTooltip('error_log', $event)"
+            @mouseleave="hideTooltip"
+          >error_log</span>
+          <span class="val mono">{{ summary.logging.errorLog }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Map -->
+    <div v-if="summary.maps && summary.maps.length" class="card">
+      <div class="card-title">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        Map
+      </div>
+      <div class="card-body">
+        <div v-for="(m, i) in summary.maps" :key="i" class="map-entry">
+          <div class="map-header-row">
+            <span
+              class="map-kw key-has-doc"
+              @mouseenter="showTooltip('map', $event)"
+              @mouseleave="hideTooltip"
+            >map</span>
+            <span class="mono map-src">{{ m.source }}</span>
+            <span class="mono map-dest">{{ m.variable }}</span>
+          </div>
+          <div class="map-body">
+            <div v-if="m.default !== null" class="map-row">
+              <span class="mono map-col-pattern map-col-default">default</span>
+              <span class="mono map-col-value">{{ m.default }}</span>
+            </div>
+            <div v-for="(entry, j) in m.entries" :key="j" class="map-row">
+              <span class="mono map-col-pattern">{{ entry.pattern }}</span>
+              <span class="mono map-col-value">{{ entry.value }}</span>
+            </div>
+          </div>
+          <div v-if="i < summary.maps.length - 1" class="vhost-divider"></div>
         </div>
       </div>
     </div>
@@ -48,7 +260,7 @@
     <!-- Upstreams -->
     <div v-if="summary.upstreams.length" class="card">
       <div class="card-title">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="3"/><line x1="12" y1="8" x2="12" y2="12"/><polyline points="7 17 12 12 17 17"/><line x1="7" y1="21" x2="7" y2="17"/><line x1="17" y1="21" x2="17" y2="17"/></svg>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 6 C5 3, 9 3, 12 6 C15 9, 19 9, 22 6"/><path d="M2 12 C5 9, 9 9, 12 12 C15 15, 19 15, 22 12"/><path d="M2 18 C5 15, 9 15, 12 18 C15 21, 19 21, 22 18"/></svg>
         Upstreams
       </div>
       <div class="card-body">
@@ -76,13 +288,14 @@
     </div>
 
     <!-- Virtual Hosts — one card per server -->
-    <div v-for="(vh, i) in summary.virtualHosts" :key="i" class="card">
+    <div v-for="(vh, i) in summary.virtualHosts" :key="i" class="card" :class="{ 'card-from-include': vh.fromInclude }">
       <div class="card-title vhost-header">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
         <span class="vhost-name">{{ vh.serverName[0] || '(no server_name)' }}</span>
         <div class="port-badges">
           <span v-for="(p, pi) in vh.listen" :key="pi" class="port-badge" :class="{ 'port-badge-ssl': isSslPort(p) }">{{ p }}</span>
         </div>
+        <span v-if="vh.fromInclude" class="from-include-badge" :title="vh.sourceFile">📎 from include</span>
       </div>
       <div class="card-body">
         <!-- Basic info -->
@@ -182,13 +395,51 @@ function hasDetails(vh) {
   return vh.details && Object.keys(vh.details).length > 0
 }
 
+function onOffClass(name, val) {
+  const ON_OFF_DIRS = new Set([
+    'sendfile', 'tcp_nopush', 'tcp_nodelay', 'reset_timedout_connection',
+    'gzip', 'gzip_vary', 'server_tokens',
+  ])
+  if (!ON_OFF_DIRS.has(name)) return ''
+  return val === 'on' ? 'val-on' : 'val-off'
+}
+
 const hasWorker = computed(() =>
-  props.summary.worker.processes || props.summary.worker.connections
+  props.summary.worker.processes ||
+  props.summary.worker.connections ||
+  props.summary.worker.rlimitNofile ||
+  props.summary.worker.eventModel ||
+  props.summary.worker.multiAccept
+)
+
+const hasHttpGlobal = computed(() =>
+  Object.keys(props.summary.httpGlobal ?? {}).length > 0 ||
+  (props.summary.httpIncludes?.length ?? 0) > 0
+)
+
+const hasRateLimiting = computed(() =>
+  props.summary.rateLimiting?.reqZones.length ||
+  props.summary.rateLimiting?.connZones.length
+)
+
+const hasCache = computed(() =>
+  props.summary.cache?.path || props.summary.cache?.key
+)
+
+const hasLogging = computed(() =>
+  props.summary.logging?.formats.length ||
+  props.summary.logging?.accessLog ||
+  props.summary.logging?.errorLog
 )
 
 const isEmpty = computed(() =>
   !hasWorker.value &&
+  !hasHttpGlobal.value &&
   props.summary.gzip === null &&
+  !hasRateLimiting.value &&
+  !hasCache.value &&
+  !hasLogging.value &&
+  !(props.summary.maps?.length) &&
   !props.summary.ssl.length &&
   !props.summary.upstreams.length &&
   !props.summary.virtualHosts.length
@@ -249,7 +500,7 @@ const isEmpty = computed(() =>
   padding: 1px 6px;
   font-size: 11px;
   font-family: 'JetBrains Mono', 'Fira Code', monospace;
-  color: #a78bfa;
+  color: #4ade80;
   text-transform: none;
   letter-spacing: 0;
   font-weight: 600;
@@ -259,6 +510,25 @@ const isEmpty = computed(() =>
   background: rgba(245, 158, 11, 0.1);
   border-color: rgba(245, 158, 11, 0.4);
   color: #f59e0b;
+}
+
+.from-include-badge {
+  margin-left: auto;
+  background: rgba(245, 158, 11, 0.1);
+  color: #f59e0b;
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  border-radius: 10px;
+  padding: 1px 8px;
+  font-size: 10px;
+  font-weight: 600;
+  flex-shrink: 0;
+  text-transform: none;
+  letter-spacing: 0;
+  cursor: help;
+}
+
+.card-from-include {
+  border-color: rgba(245, 158, 11, 0.2);
 }
 
 .card-body {
@@ -315,6 +585,7 @@ const isEmpty = computed(() =>
 .val-on  { color: #4ade80; }
 .val-off { color: #f87171; }
 .val-ssl { color: #f59e0b; }
+.val-zone { color: #a78bfa; font-size: 11px; }
 
 .card-ssl {
   border-color: rgba(245, 158, 11, 0.3);
@@ -336,7 +607,7 @@ const isEmpty = computed(() =>
   font-family: 'JetBrains Mono', 'Fira Code', monospace;
   font-size: 13px;
   font-weight: 700;
-  color: #a78bfa;
+  color: #4ade80;
   margin-bottom: 2px;
 }
 
@@ -362,6 +633,79 @@ const isEmpty = computed(() =>
 
 .val-include {
   color: #7dd3fc;
+}
+
+.map-entry {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.map-header-row {
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+  font-size: 12px;
+  margin-bottom: 4px;
+}
+
+.map-kw {
+  color: #60a5fa;
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-size: 12px;
+  min-width: 40px;
+  flex-shrink: 0;
+  cursor: help;
+  border-bottom: 1px dashed #4b5563;
+}
+
+.map-kw:hover {
+  color: #93c5fd;
+  border-bottom-color: #60a5fa;
+}
+
+.map-src {
+  color: #a78bfa;
+  font-size: 12px;
+}
+
+.map-dest {
+  color: #7dd3fc;
+  font-size: 12px;
+}
+
+.map-body {
+  padding-left: 56px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.map-row {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  font-size: 12px;
+}
+
+.map-col-pattern {
+  color: #a78bfa;
+  min-width: 120px;
+  flex-shrink: 0;
+}
+
+.map-col-default {
+  color: #6b7280;
+}
+
+.map-col-value {
+  color: #d1d5db;
+}
+
+.vhost-divider {
+  height: 1px;
+  background: #2a2a3a;
+  margin: 8px 0;
 }
 
 .empty {
@@ -404,13 +748,13 @@ const isEmpty = computed(() =>
   padding: 1px 5px;
   font-family: 'JetBrains Mono', monospace;
   font-size: 11px;
-  color: #c4b5fd;
+  color: #86efac;
 }
 
 .dir-tooltip-link {
   display: inline-block;
   font-size: 11px;
-  color: #a78bfa;
+  color: #4ade80;
   text-decoration: none;
 }
 
