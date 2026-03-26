@@ -62,7 +62,8 @@ const MOBILE_BREAKPOINT = 768
 
 // 페이지 로드 시 한 번만 체크 — resize 이벤트로 업데이트하지 않음
 // (PC에서 창 크기를 줄여도 뷰어가 유지되도록)
-const isMobile = ref(window.innerWidth < MOBILE_BREAKPOINT)
+const isBot = /bot|crawl|spider|google|bing|yandex|baidu|slurp|duckduck/i.test(navigator.userAgent)
+const isMobile = ref(!isBot && window.innerWidth < MOBILE_BREAKPOINT)
 
 const modelFile = ref(null)
 const showAbout = ref(false)

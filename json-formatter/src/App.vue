@@ -364,7 +364,8 @@ import NotFoundPage from './pages/NotFoundPage.vue'
 const isNotFound = !window.location.pathname.startsWith(import.meta.env.BASE_URL)
 
 const MOBILE_BREAKPOINT = 768
-const isMobile = ref(window.innerWidth < MOBILE_BREAKPOINT)
+const isBot = /bot|crawl|spider|google|bing|yandex|baidu|slurp|duckduck/i.test(navigator.userAgent)
+const isMobile = ref(!isBot && window.innerWidth < MOBILE_BREAKPOINT)
 
 const showHelp         = ref(false)
 const showSearch       = ref(false)

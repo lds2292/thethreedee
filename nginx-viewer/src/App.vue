@@ -514,7 +514,8 @@ watch(findQuery, () => {
 })
 
 onMounted(() => {
-  isMobile.value = window.innerWidth < 768
+  const isBot = /bot|crawl|spider|google|bing|yandex|baidu|slurp|duckduck/i.test(navigator.userAgent)
+  isMobile.value = !isBot && window.innerWidth < 768
 
   document.addEventListener('keydown', (e) => {
     if ((e.ctrlKey || e.metaKey) && e.key === 'f') {

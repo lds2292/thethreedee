@@ -344,7 +344,8 @@ hljs.registerLanguage('ruby', ruby)
 // ── Mobile detection ──────────────────────────────────────────────────────────
 const isMobile = ref(false)
 function checkMobile() {
-  isMobile.value = window.innerWidth < 768
+  const isBot = /bot|crawl|spider|google|bing|yandex|baidu|slurp|duckduck/i.test(navigator.userAgent)
+  isMobile.value = !isBot && window.innerWidth < 768
 }
 onMounted(() => {
   checkMobile()

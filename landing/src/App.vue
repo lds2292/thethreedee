@@ -179,7 +179,8 @@ onMounted(() => {
   const path = window.location.pathname.replace(/\/+$/, '') || '/'
   isNotFound.value = path !== '/'
 
-  isMobile.value = window.innerWidth < 768
+  const isBot = /bot|crawl|spider|google|bing|yandex|baidu|slurp|duckduck/i.test(navigator.userAgent)
+  isMobile.value = !isBot && window.innerWidth < 768
 
   // Load AdSense
   if (!isMobile.value) {

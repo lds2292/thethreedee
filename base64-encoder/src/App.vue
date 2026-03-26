@@ -477,7 +477,8 @@ function onKeydown(e) {
 onMounted(() => {
   isNotFound.value = !window.location.pathname.startsWith(import.meta.env.BASE_URL)
 
-  isMobile.value = window.innerWidth < 768
+  const isBot = /bot|crawl|spider|google|bing|yandex|baidu|slurp|duckduck/i.test(navigator.userAgent)
+  isMobile.value = !isBot && window.innerWidth < 768
 
   // AdSense (사이드바가 표시되는 데스크탑에서만 로드)
   if (!isMobile.value) {
