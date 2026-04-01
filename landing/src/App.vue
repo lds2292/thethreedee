@@ -14,7 +14,7 @@
           </svg>
           <span class="logo-text">toolzydev</span>
         </div>
-        <span class="tagline">Developer Tools, Simplified</span>
+        <span class="tagline">Free Online Dev Toolkit</span>
       </div>
     </header>
 
@@ -34,18 +34,19 @@
     <!-- Hero -->
     <section class="hero">
       <h1 class="hero-title">Developer Tools,<br><span class="accent">Simplified</span></h1>
-      <p class="hero-sub">브라우저에서 바로 쓰는 무료 개발 툴 — 설치 없이, 로그인 없이.</p>
+      <p class="hero-sub">브라우저에서 바로 쓰는 무료 개발 툴 -- 설치 없이, 로그인 없이.</p>
     </section>
 
     <!-- Tool Cards -->
     <section class="tools">
       <div v-for="cat in filteredCategories" :key="cat.id" class="category-section">
-        <div class="category-header">
+        <div class="category-header reveal">
           <span class="category-label">{{ cat.label }}</span>
           <span class="category-label-en">{{ cat.en }}</span>
+          <span class="category-count">{{ cat.tools.length }} tools</span>
         </div>
         <div class="cards">
-          <a v-for="tool in cat.tools" :key="tool.key" class="card" :href="tool.href">
+          <a v-for="(tool, idx) in cat.tools" :key="tool.key" class="card reveal" :class="{ 'card-featured': idx === 0 }" :href="tool.href" :style="{ transitionDelay: (idx * 80) + 'ms' }">
             <div class="card-bg">
               <img v-if="screenshots[tool.key]" :src="screenshots[tool.key]" :alt="tool.title + ' preview'" loading="lazy" />
             </div>
@@ -67,11 +68,11 @@
     </section>
 
     <!-- About -->
-    <section class="about">
+    <section class="about reveal">
       <h2 class="section-title">About <span class="accent">toolzydev</span></h2>
       <p class="about-text">
         toolzydev는 개발자를 위한 무료 온라인 도구 모음입니다.
-        JSON 포맷팅, 정규식 테스트, Base64 인코딩, Cron 표현식 검증, 3D 모델 뷰어, nginx 설정 분석까지 —
+        JSON 포맷팅, 정규식 테스트, Base64 인코딩, Cron 표현식 검증, 3D 모델 뷰어, nginx 설정 분석까지 --
         자주 쓰는 개발 도구를 브라우저에서 바로 사용할 수 있습니다.
       </p>
       <p class="about-text">
@@ -83,43 +84,20 @@
 
     <!-- How It Works -->
     <section class="how-it-works">
-      <h2 class="section-title">How It Works</h2>
-      <div class="how-grid">
-        <div class="how-item">
-          <div class="how-icon">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
-              <line x1="3" y1="9" x2="21" y2="9"/>
-            </svg>
+      <div class="how-it-works-inner">
+        <h2 class="section-title">How It Works</h2>
+        <div class="how-grid">
+          <div v-for="(item, idx) in howItems" :key="idx" class="how-item reveal" :style="{ transitionDelay: (idx * 100) + 'ms' }">
+            <div class="how-icon" v-html="item.icon"></div>
+            <h3>{{ item.title }}</h3>
+            <p>{{ item.desc }}</p>
           </div>
-          <h3>브라우저에서 바로 실행</h3>
-          <p>별도의 프로그램 설치가 필요 없습니다. 웹 브라우저만 있으면 모든 도구를 즉시 사용할 수 있습니다.</p>
-        </div>
-        <div class="how-item">
-          <div class="how-icon">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-            </svg>
-          </div>
-          <h3>데이터는 내 브라우저 안에서만</h3>
-          <p>입력한 데이터는 서버로 전송되지 않습니다. 모든 처리가 클라이언트 사이드에서 이루어지므로 민감한 데이터도 안심하고 사용하세요.</p>
-        </div>
-        <div class="how-item">
-          <div class="how-icon">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="12" cy="12" r="10"/>
-              <line x1="2" y1="12" x2="22" y2="12"/>
-              <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
-            </svg>
-          </div>
-          <h3>로그인 없이 무료</h3>
-          <p>계정 생성, 이메일 인증, 구독 없이 모든 기능을 제한 없이 사용할 수 있습니다.</p>
         </div>
       </div>
     </section>
 
     <!-- FAQ -->
-    <section class="faq">
+    <section class="faq reveal">
       <h2 class="section-title">자주 묻는 질문</h2>
       <div class="faq-list">
         <details class="faq-item">
@@ -182,7 +160,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, nextTick, watch } from 'vue'
 import MobileBlock from './components/MobileBlock.vue'
 import NotFound from './components/NotFound.vue'
 import PrivacyPolicy from './components/PrivacyPolicy.vue'
@@ -255,6 +233,24 @@ const categories = [
   },
 ]
 
+const howItems = [
+  {
+    icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/></svg>',
+    title: '브라우저에서 바로 실행',
+    desc: '별도의 프로그램 설치가 필요 없습니다. 웹 브라우저만 있으면 모든 도구를 즉시 사용할 수 있습니다.',
+  },
+  {
+    icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>',
+    title: '데이터는 내 브라우저 안에서만',
+    desc: '입력한 데이터는 서버로 전송되지 않습니다. 모든 처리가 클라이언트 사이드에서 이루어지므로 민감한 데이터도 안심하고 사용하세요.',
+  },
+  {
+    icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>',
+    title: '로그인 없이 무료',
+    desc: '계정 생성, 이메일 인증, 구독 없이 모든 기능을 제한 없이 사용할 수 있습니다.',
+  },
+]
+
 const navItems = [
   { id: 'all', label: 'All' },
   ...categories.map(cat => ({ id: cat.id, label: cat.label })),
@@ -290,6 +286,28 @@ onMounted(() => {
       try { (window.adsbygoogle = window.adsbygoogle || []).push({}) } catch {}
     }
   }
+
+  // Scroll reveal animation
+  const revealObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('revealed')
+        revealObserver.unobserve(entry.target)
+      }
+    })
+  }, { threshold: 0.1 })
+
+  const observeRevealElements = () => {
+    nextTick(() => {
+      document.querySelectorAll('.reveal:not(.revealed)').forEach(el => revealObserver.observe(el))
+    })
+  }
+
+  observeRevealElements()
+
+  watch(activeCategory, () => {
+    observeRevealElements()
+  })
 })
 </script>
 
@@ -299,6 +317,7 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   background: #0f0f13;
+  overflow-x: hidden;
 }
 
 /* Header */
@@ -392,6 +411,19 @@ onMounted(() => {
   margin: 72px auto 0;
   padding: 0 32px;
   text-align: center;
+  position: relative;
+}
+
+.hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(circle, #2a2a3a 1px, transparent 1px);
+  background-size: 24px 24px;
+  mask-image: radial-gradient(ellipse 60% 60% at 50% 50%, black 20%, transparent 70%);
+  -webkit-mask-image: radial-gradient(ellipse 60% 60% at 50% 50%, black 20%, transparent 70%);
+  opacity: 0.4;
+  pointer-events: none;
 }
 
 .hero-title {
@@ -400,6 +432,8 @@ onMounted(() => {
   line-height: 1.15;
   color: #f0f0f5;
   letter-spacing: -0.03em;
+  position: relative;
+  z-index: 1;
 }
 
 .accent {
@@ -411,7 +445,10 @@ onMounted(() => {
   font-size: 18px;
   color: #6b7280;
   line-height: 1.6;
+  position: relative;
+  z-index: 1;
 }
+
 
 /* Tool Cards */
 .tools {
@@ -449,6 +486,17 @@ onMounted(() => {
   color: #6b7280;
 }
 
+.category-count {
+  padding: 2px 8px;
+  background: rgba(167, 139, 250, 0.12);
+  border: 1px solid rgba(167, 139, 250, 0.3);
+  border-radius: 4px;
+  color: #a78bfa;
+  font-size: 11px;
+  font-weight: 500;
+  margin-left: auto;
+}
+
 .cards {
   display: grid;
   grid-template-columns: 1fr;
@@ -473,6 +521,24 @@ onMounted(() => {
 .card:hover {
   border-color: rgba(167, 139, 250, 0.5);
   transform: translateY(-2px);
+}
+
+.card-featured {
+  padding: 36px 28px;
+}
+
+.card-featured .card-title {
+  font-size: 22px;
+}
+
+.card-featured .card-bg {
+  transform: translateX(20%);
+  opacity: 0.3;
+}
+
+.card-featured:hover .card-bg {
+  transform: translateX(0);
+  opacity: 1;
 }
 
 /* 배경 스크린샷 레이어 */
@@ -582,10 +648,15 @@ onMounted(() => {
 
 /* How It Works */
 .how-it-works {
+  background: #12121a;
+  padding: 56px 32px;
+  margin-top: 56px;
+}
+
+.how-it-works-inner {
   max-width: 960px;
   width: 100%;
-  margin: 56px auto 0;
-  padding: 0 32px;
+  margin: 0 auto;
 }
 
 .how-grid {
@@ -671,7 +742,7 @@ onMounted(() => {
 }
 
 .faq-item[open] summary::before {
-  content: '−';
+  content: '\2212';
 }
 
 .faq-item summary:hover {
@@ -685,6 +756,15 @@ onMounted(() => {
   color: #9ca3af;
 }
 
+.faq-item[open] p {
+  animation: faqFadeIn 0.25s ease;
+}
+
+@keyframes faqFadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 .faq-item a {
   color: #a78bfa;
   text-decoration: none;
@@ -692,6 +772,18 @@ onMounted(() => {
 
 .faq-item a:hover {
   text-decoration: underline;
+}
+
+/* Scroll Reveal */
+.reveal {
+  opacity: 0;
+  transform: translateY(12px);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+
+.revealed {
+  opacity: 1;
+  transform: translateY(0);
 }
 
 /* AdSense */
@@ -706,7 +798,7 @@ onMounted(() => {
 /* Footer */
 .footer {
   margin-top: auto;
-  padding: 24px 32px;
+  padding: 48px 32px;
   text-align: center;
   font-size: 13px;
   color: #6b7280;
@@ -714,7 +806,7 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 10px;
+  gap: 16px;
 }
 
 .footer-tools,
