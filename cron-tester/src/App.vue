@@ -87,7 +87,23 @@
 
         <!-- Combined expression display -->
         <div class="expr-display" :class="{ error: result && !result.valid, success: result && result.valid }">
-          <code class="expr-combined">{{ expression }}</code>
+          <input
+            class="expr-input"
+            :value="expression"
+            @input="onExpressionInput($event.target.value)"
+            spellcheck="false"
+            autocomplete="off"
+            placeholder="표현식을 입력하세요"
+          />
+          <button class="copy-btn" @click="copyExpression" :title="copyTooltip">
+            <svg v-if="!copied" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+              <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
+            </svg>
+            <svg v-else width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+          </button>
           <button class="clear-btn" @click="resetFields">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
               <line x1="18" y1="6" x2="6" y2="18"/>
@@ -219,6 +235,8 @@ const showHelp = ref(false)
 const format = ref('standard')
 const focusedField = ref(-1)
 const openDropdown = ref(-1)
+const copied = ref(false)
+const copyTooltip = ref('복사')
 
 const fieldPresetsData = {
   second: [
@@ -369,6 +387,34 @@ function resetFields() {
 
 function applyPreset(preset) {
   fieldValues.value = preset.expr.split(' ')
+}
+
+function onExpressionInput(value) {
+  const parts = value.trim().split(/\s+/)
+  const expectedLen = currentFormatInfo.value.fields.length
+  // 필드 수가 맞으면 포맷 자동 전환, 아니면 현재 포맷 유지
+  if (parts.length === 6 && format.value === 'standard') {
+    format.value = 'seconds'
+  } else if (parts.length === 5 && format.value === 'seconds') {
+    format.value = 'standard'
+  }
+  const len = currentFormatInfo.value.fields.length
+  const newFields = Array(len).fill('')
+  for (let i = 0; i < len; i++) {
+    newFields[i] = parts[i] || ''
+  }
+  fieldValues.value = newFields
+}
+
+function copyExpression() {
+  navigator.clipboard.writeText(expression.value).then(() => {
+    copied.value = true
+    copyTooltip.value = '복사됨!'
+    setTimeout(() => {
+      copied.value = false
+      copyTooltip.value = '복사'
+    }, 1500)
+  })
 }
 
 function focusNextField(i, e) {
@@ -860,11 +906,39 @@ onUnmounted(() => {
   border-color: rgba(34, 197, 94, 0.25);
 }
 
-.expr-combined {
+.expr-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
   font-family: 'Menlo', 'Monaco', 'Consolas', monospace;
   font-size: 14px;
-  color: #6b7280;
+  color: #d1d5db;
   letter-spacing: 0.06em;
+  min-width: 0;
+}
+
+.expr-input::placeholder {
+  color: #3a3a4f;
+}
+
+.copy-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 8px;
+  background: transparent;
+  border: 1px solid #2a2a3a;
+  border-radius: 4px;
+  color: #6b7280;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+  flex-shrink: 0;
+}
+
+.copy-btn:hover {
+  color: #a78bfa;
+  border-color: rgba(167, 139, 250, 0.4);
 }
 
 .clear-btn {
