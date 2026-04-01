@@ -16,6 +16,13 @@
         </div>
         <div class="header-right">
           <span class="supported-formats">STL · OBJ · GLTF · GLB 지원</span>
+          <button class="btn-help" title="도움말" @click="showHelp = true">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"/>
+              <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
+              <line x1="12" y1="17" x2="12.01" y2="17"/>
+            </svg>
+          </button>
           <button class="btn-about" title="About" @click="showAbout = true">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <circle cx="12" cy="12" r="10"/>
@@ -43,6 +50,7 @@
         </aside>
       </main>
 
+      <HelpModal v-model="showHelp" />
       <AboutModal v-model="showAbout" />
     </template>
   </div>
@@ -53,6 +61,7 @@ import { ref, onMounted } from 'vue'
 import DropZone from './components/DropZone.vue'
 import ModelViewer from './components/ModelViewer.vue'
 import AboutModal from './components/AboutModal.vue'
+import HelpModal from './components/HelpModal.vue'
 import MobileBlock from './components/MobileBlock.vue'
 import NotFoundPage from './pages/NotFoundPage.vue'
 
@@ -67,6 +76,7 @@ const isMobile = ref(!isBot && window.innerWidth < MOBILE_BREAKPOINT)
 
 const modelFile = ref(null)
 const showAbout = ref(false)
+const showHelp = ref(false)
 
 onMounted(() => {
   if (isMobile.value) return
@@ -125,6 +135,7 @@ function resetFile() {
   letter-spacing: 0.05em;
 }
 
+.btn-help,
 .btn-about {
   display: flex;
   align-items: center;
@@ -140,6 +151,7 @@ function resetFile() {
   padding: 0;
 }
 
+.btn-help:hover,
 .btn-about:hover {
   color: #a78bfa;
   border-color: rgba(167, 139, 250, 0.4);

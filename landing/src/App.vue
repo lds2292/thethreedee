@@ -1,5 +1,7 @@
 <template>
-  <NotFound v-if="isNotFound" />
+  <PrivacyPolicy v-if="currentPage === 'privacy'" />
+  <TermsOfService v-else-if="currentPage === 'terms'" />
+  <NotFound v-else-if="isNotFound" />
   <MobileBlock v-else-if="isMobile" />
   <div v-else class="page">
     <!-- Header -->
@@ -64,6 +66,89 @@
       </div>
     </section>
 
+    <!-- About -->
+    <section class="about">
+      <h2 class="section-title">About <span class="accent">toolzydev</span></h2>
+      <p class="about-text">
+        toolzydev는 개발자를 위한 무료 온라인 도구 모음입니다.
+        JSON 포맷팅, 정규식 테스트, Base64 인코딩, Cron 표현식 검증, 3D 모델 뷰어, nginx 설정 분석까지 —
+        자주 쓰는 개발 도구를 브라우저에서 바로 사용할 수 있습니다.
+      </p>
+      <p class="about-text">
+        모든 도구는 설치 없이, 로그인 없이, 완전히 무료로 사용할 수 있습니다.
+        소프트웨어 개발자, DevOps 엔지니어, 백엔드/프론트엔드 개발자, 학생 등
+        코드를 다루는 모든 분들을 위해 만들었습니다.
+      </p>
+    </section>
+
+    <!-- How It Works -->
+    <section class="how-it-works">
+      <h2 class="section-title">How It Works</h2>
+      <div class="how-grid">
+        <div class="how-item">
+          <div class="how-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+              <line x1="3" y1="9" x2="21" y2="9"/>
+            </svg>
+          </div>
+          <h3>브라우저에서 바로 실행</h3>
+          <p>별도의 프로그램 설치가 필요 없습니다. 웹 브라우저만 있으면 모든 도구를 즉시 사용할 수 있습니다.</p>
+        </div>
+        <div class="how-item">
+          <div class="how-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            </svg>
+          </div>
+          <h3>데이터는 내 브라우저 안에서만</h3>
+          <p>입력한 데이터는 서버로 전송되지 않습니다. 모든 처리가 클라이언트 사이드에서 이루어지므로 민감한 데이터도 안심하고 사용하세요.</p>
+        </div>
+        <div class="how-item">
+          <div class="how-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="2" y1="12" x2="22" y2="12"/>
+              <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+            </svg>
+          </div>
+          <h3>로그인 없이 무료</h3>
+          <p>계정 생성, 이메일 인증, 구독 없이 모든 기능을 제한 없이 사용할 수 있습니다.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- FAQ -->
+    <section class="faq">
+      <h2 class="section-title">자주 묻는 질문</h2>
+      <div class="faq-list">
+        <details class="faq-item">
+          <summary>toolzydev는 무료인가요?</summary>
+          <p>네, toolzydev의 모든 도구는 완전히 무료입니다. 숨겨진 요금이나 프리미엄 플랜이 없으며, 모든 기능을 제한 없이 사용할 수 있습니다.</p>
+        </details>
+        <details class="faq-item">
+          <summary>계정을 만들어야 하나요?</summary>
+          <p>아니요, 회원가입이나 로그인 없이 바로 사용할 수 있습니다. 이메일 주소나 개인정보를 입력할 필요가 없습니다.</p>
+        </details>
+        <details class="faq-item">
+          <summary>내 데이터가 안전한가요?</summary>
+          <p>toolzydev의 모든 도구는 브라우저에서 직접 실행되며, 입력한 데이터는 서버로 전송되지 않습니다. JSON, 정규식, 3D 파일 등 어떤 데이터도 외부로 유출되지 않으므로 민감한 데이터도 안심하고 사용할 수 있습니다.</p>
+        </details>
+        <details class="faq-item">
+          <summary>어떤 도구를 제공하나요?</summary>
+          <p>현재 JSON Formatter(포맷/검증/변환), Base64 Encoder(인코딩/디코딩), Regex Tester(정규식 테스트), Cron Tester(Cron 표현식 검증), 3D Viewer(STL/OBJ/GLTF/GLB 뷰어), nginx Viewer(설정 파싱/분석)를 제공하며, 새로운 도구를 지속적으로 추가하고 있습니다.</p>
+        </details>
+        <details class="faq-item">
+          <summary>오프라인에서 사용할 수 있나요?</summary>
+          <p>현재 오프라인 모드는 지원하지 않습니다. 인터넷 연결이 필요하지만, 도구 실행 자체는 브라우저에서 로컬로 처리되므로 빠른 속도로 동작합니다.</p>
+        </details>
+        <details class="faq-item">
+          <summary>버그는 어떻게 신고하나요?</summary>
+          <p><a href="mailto:toolzy.eden@gmail.com">toolzy.eden@gmail.com</a>으로 이메일을 보내주세요. 버그 신고, 기능 제안, 피드백을 환영합니다.</p>
+        </details>
+      </div>
+    </section>
+
     <!-- AdSense -->
     <section class="adsense">
       <ins class="adsbygoogle"
@@ -76,19 +161,22 @@
 
     <!-- Footer -->
     <footer class="footer">
-      <span>© 2025 toolzydev</span>
-      <span class="sep">·</span>
-      <a href="/json/">JSON Formatter</a>
-      <span class="sep">·</span>
-      <a href="/3d-viewer/">3D Viewer</a>
-      <span class="sep">·</span>
-      <a href="/encode/">Base64 Encoder</a>
-      <span class="sep">·</span>
-      <a href="/regex/">Regex Tester</a>
-      <span class="sep">·</span>
-      <a href="/cron/">Cron Tester</a>
-      <span class="sep">·</span>
-      <a href="/nginx/">nginx Viewer</a>
+      <div class="footer-tools">
+        <a href="/json/">JSON Formatter</a>
+        <span class="sep">·</span>
+        <a href="/3d-viewer/">3D Viewer</a>
+        <span class="sep">·</span>
+        <a href="/encode/">Base64 Encoder</a>
+        <span class="sep">·</span>
+        <a href="/regex/">Regex Tester</a>
+        <span class="sep">·</span>
+        <a href="/cron/">Cron Tester</a>
+        <span class="sep">·</span>
+        <a href="/nginx/">nginx Viewer</a>
+      </div>
+      <div class="footer-legal">
+        <span>© 2025 toolzydev</span>
+      </div>
     </footer>
   </div>
 </template>
@@ -97,9 +185,12 @@
 import { ref, computed, onMounted } from 'vue'
 import MobileBlock from './components/MobileBlock.vue'
 import NotFound from './components/NotFound.vue'
+import PrivacyPolicy from './components/PrivacyPolicy.vue'
+import TermsOfService from './components/TermsOfService.vue'
 
 const isMobile = ref(false)
 const isNotFound = ref(false)
+const currentPage = ref('home')
 const activeCategory = ref('all')
 
 const screenshots = {
@@ -177,7 +268,13 @@ const filteredCategories = computed(() =>
 
 onMounted(() => {
   const path = window.location.pathname.replace(/\/+$/, '') || '/'
-  isNotFound.value = path !== '/'
+  if (path === '/privacy') {
+    currentPage.value = 'privacy'
+  } else if (path === '/terms') {
+    currentPage.value = 'terms'
+  } else if (path !== '/') {
+    isNotFound.value = true
+  }
 
   const isBot = /bot|crawl|spider|google|bing|yandex|baidu|slurp|duckduck/i.test(navigator.userAgent)
   isMobile.value = !isBot && window.innerWidth < 768
@@ -460,6 +557,143 @@ onMounted(() => {
   transform: translateX(2px);
 }
 
+/* About */
+.about {
+  max-width: 960px;
+  width: 100%;
+  margin: 64px auto 0;
+  padding: 0 32px;
+}
+
+.section-title {
+  font-size: 28px;
+  font-weight: 800;
+  color: #f0f0f5;
+  margin-bottom: 20px;
+  letter-spacing: -0.02em;
+}
+
+.about-text {
+  font-size: 15px;
+  line-height: 1.75;
+  color: #9ca3af;
+  margin-bottom: 12px;
+}
+
+/* How It Works */
+.how-it-works {
+  max-width: 960px;
+  width: 100%;
+  margin: 56px auto 0;
+  padding: 0 32px;
+}
+
+.how-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  margin-top: 8px;
+}
+
+.how-item {
+  background: #16161d;
+  border: 1px solid #2a2a3a;
+  border-radius: 10px;
+  padding: 24px 20px;
+}
+
+.how-icon {
+  color: #a78bfa;
+  margin-bottom: 14px;
+}
+
+.how-item h3 {
+  font-size: 15px;
+  font-weight: 700;
+  color: #f0f0f5;
+  margin-bottom: 8px;
+}
+
+.how-item p {
+  font-size: 13px;
+  line-height: 1.65;
+  color: #9ca3af;
+}
+
+/* FAQ */
+.faq {
+  max-width: 960px;
+  width: 100%;
+  margin: 56px auto 0;
+  padding: 0 32px;
+}
+
+.faq-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.faq-item {
+  border-bottom: 1px solid #2a2a3a;
+}
+
+.faq-item:first-child {
+  border-top: 1px solid #2a2a3a;
+}
+
+.faq-item summary {
+  padding: 16px 4px;
+  font-size: 15px;
+  font-weight: 600;
+  color: #f0f0f5;
+  cursor: pointer;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  transition: color 0.15s;
+}
+
+.faq-item summary::-webkit-details-marker {
+  display: none;
+}
+
+.faq-item summary::before {
+  content: '+';
+  font-size: 18px;
+  font-weight: 400;
+  color: #a78bfa;
+  flex-shrink: 0;
+  width: 20px;
+  text-align: center;
+  transition: transform 0.2s;
+}
+
+.faq-item[open] summary::before {
+  content: '−';
+}
+
+.faq-item summary:hover {
+  color: #a78bfa;
+}
+
+.faq-item p {
+  padding: 0 4px 16px 36px;
+  font-size: 14px;
+  line-height: 1.7;
+  color: #9ca3af;
+}
+
+.faq-item a {
+  color: #a78bfa;
+  text-decoration: none;
+}
+
+.faq-item a:hover {
+  text-decoration: underline;
+}
+
 /* AdSense */
 .adsense {
   max-width: 960px;
@@ -472,15 +706,24 @@ onMounted(() => {
 /* Footer */
 .footer {
   margin-top: auto;
-  padding: 32px;
+  padding: 24px 32px;
   text-align: center;
   font-size: 13px;
   color: #6b7280;
   border-top: 1px solid #2a2a3a;
   display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.footer-tools,
+.footer-legal {
+  display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
+  flex-wrap: wrap;
 }
 
 .footer a {

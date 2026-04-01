@@ -217,6 +217,26 @@
               <p><strong>Standard (5-field)</strong> — Unix/Linux 표준 cron</p>
               <p><strong>With Seconds (6-field)</strong> — AWS EventBridge, Spring, Quartz 등에서 사용</p>
             </section>
+            <section>
+              <h3>실용 예제</h3>
+              <ul>
+                <li><code>0 2 * * *</code> — 매일 새벽 2시에 데이터베이스 백업</li>
+                <li><code>0 0 * * 0</code> — 매주 일요일 자정에 로그 정리</li>
+                <li><code>0 9 1 * *</code> — 매월 1일 오전 9시에 월간 리포트 생성</li>
+                <li><code>*/10 * * * *</code> — 10분마다 헬스체크 실행</li>
+                <li><code>0 9-18 * * 1-5</code> — 평일 업무시간(9~18시) 매 정각 알림</li>
+                <li><code>0 0 1 1,4,7,10 *</code> — 분기 첫날 자정에 분기 보고서 생성</li>
+              </ul>
+            </section>
+            <section>
+              <h3>자주 하는 실수 & 팁</h3>
+              <ul>
+                <li><strong>요일 번호 혼동</strong> — 일요일은 <code>0</code> 또는 <code>7</code> 입니다. <code>1</code>은 월요일입니다.</li>
+                <li><strong>일(월)과 요일 동시 지정</strong> — 대부분의 cron 구현에서 둘 다 <code>*</code>가 아닌 값을 지정하면 OR 조건으로 동작합니다 (AND가 아님).</li>
+                <li><strong>타임존 주의</strong> — cron은 서버의 시스템 시간 기준으로 실행됩니다. UTC와 로컬 시간의 차이를 반드시 확인하세요.</li>
+                <li><strong>0분 빠뜨리기</strong> — <code>* 9 * * *</code>은 "9시 정각"이 아니라 "9시의 매분(60번)"을 의미합니다. 정각 한 번만 실행하려면 <code>0 9 * * *</code>을 사용하세요.</li>
+              </ul>
+            </section>
           </div>
         </div>
       </div>

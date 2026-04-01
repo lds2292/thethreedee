@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Free Online 3D Viewer - STL · OBJ · GLTF | threedeeview.site</title>
+    <title>3D Viewer — Free Online STL · OBJ · GLTF Viewer | toolzydev</title>
 
     <!-- Content Security Policy -->
     <meta http-equiv="Content-Security-Policy"
@@ -56,6 +56,56 @@
         "price": "0",
         "priceCurrency": "USD"
       }
+    }
+    </script>
+
+    <!-- JSON-LD: FAQ -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "What 3D file formats does this viewer support?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "The 3D Viewer supports STL (binary and ASCII), OBJ, GLTF, and GLB file formats. These cover the most common 3D file types used in 3D printing, CAD, game development, and web applications."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Is there a file size limit?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "The maximum file size is 1GB. All file parsing and rendering happens in your browser, so performance depends on your device's hardware capabilities."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Is this 3D viewer free to use?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes, the 3D Viewer is completely free. No login, installation, or payment is required. Just drag and drop your 3D file to view it instantly."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Are my 3D files uploaded to a server?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "No. Your 3D files are never uploaded to any server. All file parsing and rendering happens entirely in your browser using WebGL and Three.js. Your design files remain completely private."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How do I rotate, zoom, and pan the 3D model?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Use left-click drag to rotate, scroll wheel to zoom in/out, and right-click drag to pan the model. The viewer automatically centers and fits your model when it's first loaded."
+          }
+        }
+      ]
     }
     </script>
 
