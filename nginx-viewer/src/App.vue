@@ -1,6 +1,14 @@
 <template>
-  <MobileBlock v-if="isMobile" />
-  <div v-else class="layout">
+  <div class="layout">
+    <!-- Mobile Banner -->
+    <div v-if="isMobile" class="mobile-banner">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="5" y="2" width="14" height="20" rx="2" ry="2"/>
+        <line x1="12" y1="18" x2="12.01" y2="18"/>
+      </svg>
+      <span>PC 환경에서 더 나은 경험을 제공합니다</span>
+      <button class="mobile-banner-close" @click="isMobile = false">&times;</button>
+    </div>
     <!-- Header -->
     <header class="header">
       <div class="header-left">
@@ -215,7 +223,6 @@
 
 <script setup>
 import { ref, computed, onMounted, provide, watch, nextTick } from 'vue'
-import MobileBlock from './components/MobileBlock.vue'
 import { parse, format, highlight, summarize } from './utils/nginxParser.js'
 import { SAMPLES } from './utils/nginxSamples.js'
 import TreeNode from './components/TreeNode.vue'
@@ -1105,6 +1112,37 @@ onMounted(() => {
 
 .sample-item:last-child { border-bottom: none; }
 .sample-item:hover { background: #2a2a3a; color: #a78bfa; }
+
+/* Mobile Banner */
+.mobile-banner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background: rgba(167, 139, 250, 0.1);
+  border-bottom: 1px solid rgba(167, 139, 250, 0.25);
+  color: #c4b5fd;
+  font-size: 13px;
+  font-weight: 500;
+  flex-shrink: 0;
+}
+
+.mobile-banner svg { flex-shrink: 0; opacity: 0.8; }
+
+.mobile-banner-close {
+  margin-left: 8px;
+  background: none;
+  border: none;
+  color: #c4b5fd;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 4px;
+  opacity: 0.6;
+}
+
+.mobile-banner-close:hover { opacity: 1; }
 </style>
 
 <style>

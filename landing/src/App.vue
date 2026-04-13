@@ -2,8 +2,16 @@
   <PrivacyPolicy v-if="currentPage === 'privacy'" />
   <TermsOfService v-else-if="currentPage === 'terms'" />
   <NotFound v-else-if="isNotFound" />
-  <MobileBlock v-else-if="isMobile" />
   <div v-else class="page">
+    <!-- Mobile Banner -->
+    <div v-if="isMobile" class="mobile-banner">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="5" y="2" width="14" height="20" rx="2" ry="2"/>
+        <line x1="12" y1="18" x2="12.01" y2="18"/>
+      </svg>
+      <span>PC 환경에서 더 나은 경험을 제공합니다</span>
+      <button class="mobile-banner-close" @click="isMobile = false">&times;</button>
+    </div>
     <!-- Header -->
     <header class="header">
       <div class="header-inner">
@@ -161,7 +169,6 @@
 
 <script setup>
 import { ref, computed, onMounted, nextTick, watch } from 'vue'
-import MobileBlock from './components/MobileBlock.vue'
 import NotFound from './components/NotFound.vue'
 import PrivacyPolicy from './components/PrivacyPolicy.vue'
 import TermsOfService from './components/TermsOfService.vue'
@@ -276,15 +283,13 @@ onMounted(() => {
   isMobile.value = !isBot && window.innerWidth < 768
 
   // Load AdSense
-  if (!isMobile.value) {
-    const script = document.createElement('script')
-    script.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1253318658034453'
-    script.async = true
-    script.crossOrigin = 'anonymous'
-    document.head.appendChild(script)
-    script.onload = () => {
-      try { (window.adsbygoogle = window.adsbygoogle || []).push({}) } catch {}
-    }
+  const script = document.createElement('script')
+  script.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1253318658034453'
+  script.async = true
+  script.crossOrigin = 'anonymous'
+  document.head.appendChild(script)
+  script.onload = () => {
+    try { (window.adsbygoogle = window.adsbygoogle || []).push({}) } catch {}
   }
 
   // Scroll reveal animation
@@ -830,5 +835,131 @@ onMounted(() => {
 
 .sep {
   color: #3a3a4f;
+}
+
+/* Mobile Banner */
+.mobile-banner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background: rgba(167, 139, 250, 0.1);
+  border-bottom: 1px solid rgba(167, 139, 250, 0.25);
+  color: #c4b5fd;
+  font-size: 13px;
+  font-weight: 500;
+  position: sticky;
+  top: 0;
+  z-index: 11;
+}
+
+.mobile-banner svg {
+  flex-shrink: 0;
+  opacity: 0.8;
+}
+
+.mobile-banner-close {
+  margin-left: 8px;
+  background: none;
+  border: none;
+  color: #c4b5fd;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 4px;
+  opacity: 0.6;
+}
+
+.mobile-banner-close:hover {
+  opacity: 1;
+}
+
+/* Mobile responsive */
+@media (max-width: 767px) {
+  .header {
+    padding: 0 16px;
+    position: static;
+  }
+
+  .cat-nav {
+    position: static;
+    padding: 0 16px;
+    overflow-x: auto;
+  }
+
+  .cat-nav-inner {
+    flex-wrap: nowrap;
+  }
+
+  .hero {
+    margin-top: 40px;
+    padding: 0 16px;
+  }
+
+  .hero-title {
+    font-size: 32px;
+  }
+
+  .hero-sub {
+    font-size: 15px;
+  }
+
+  .tools {
+    padding: 0 16px;
+    margin-top: 32px;
+  }
+
+  .card {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 20px 16px;
+  }
+
+  .card-bg {
+    display: none;
+  }
+
+  .card-arrow {
+    display: none;
+  }
+
+  .about {
+    padding: 0 16px;
+    margin-top: 40px;
+  }
+
+  .section-title {
+    font-size: 22px;
+  }
+
+  .how-it-works {
+    padding: 40px 16px;
+    margin-top: 40px;
+  }
+
+  .how-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .faq {
+    padding: 0 16px;
+    margin-top: 40px;
+  }
+
+  .adsense {
+    padding: 0 16px;
+    margin-top: 32px;
+  }
+
+  .footer {
+    padding: 32px 16px;
+  }
+
+  .tagline {
+    display: none;
+  }
 }
 </style>

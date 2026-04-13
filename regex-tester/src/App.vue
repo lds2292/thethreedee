@@ -1,7 +1,14 @@
 <template>
-  <MobileBlock v-if="isMobile" />
-
-  <div v-else class="app">
+  <div class="app">
+    <!-- Mobile Banner -->
+    <div v-if="isMobile" class="mobile-banner">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="5" y="2" width="14" height="20" rx="2" ry="2"/>
+        <line x1="12" y1="18" x2="12.01" y2="18"/>
+      </svg>
+      <span>PC 환경에서 더 나은 경험을 제공합니다</span>
+      <button class="mobile-banner-close" @click="isMobile = false">&times;</button>
+    </div>
     <!-- Header -->
     <header class="header">
       <div class="header-left">
@@ -315,7 +322,6 @@
 
 <script setup>
 import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue'
-import MobileBlock from './components/MobileBlock.vue'
 import hljs from 'highlight.js/lib/core'
 import javascript from 'highlight.js/lib/languages/javascript'
 import typescript from 'highlight.js/lib/languages/typescript'
@@ -1729,4 +1735,35 @@ Numbers: 42, -3.14, 1000, 0.5`
   padding: 1px 5px;
   border-radius: 3px;
 }
+
+/* Mobile Banner */
+.mobile-banner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background: rgba(167, 139, 250, 0.1);
+  border-bottom: 1px solid rgba(167, 139, 250, 0.25);
+  color: #c4b5fd;
+  font-size: 13px;
+  font-weight: 500;
+  flex-shrink: 0;
+}
+
+.mobile-banner svg { flex-shrink: 0; opacity: 0.8; }
+
+.mobile-banner-close {
+  margin-left: 8px;
+  background: none;
+  border: none;
+  color: #c4b5fd;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 4px;
+  opacity: 0.6;
+}
+
+.mobile-banner-close:hover { opacity: 1; }
 </style>

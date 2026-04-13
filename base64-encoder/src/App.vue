@@ -480,16 +480,14 @@ onMounted(() => {
   const isBot = /bot|crawl|spider|google|bing|yandex|baidu|slurp|duckduck/i.test(navigator.userAgent)
   isMobile.value = !isBot && window.innerWidth < 768
 
-  // AdSense (사이드바가 표시되는 데스크탑에서만 로드)
-  if (!isMobile.value) {
-    const script = document.createElement('script')
-    script.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1253318658034453'
-    script.async = true
-    script.crossOrigin = 'anonymous'
-    document.head.appendChild(script)
-    script.onload = () => {
-      try { (window.adsbygoogle = window.adsbygoogle || []).push({}) } catch {}
-    }
+  // AdSense
+  const script = document.createElement('script')
+  script.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1253318658034453'
+  script.async = true
+  script.crossOrigin = 'anonymous'
+  document.head.appendChild(script)
+  script.onload = () => {
+    try { (window.adsbygoogle = window.adsbygoogle || []).push({}) } catch {}
   }
 })
 </script>
